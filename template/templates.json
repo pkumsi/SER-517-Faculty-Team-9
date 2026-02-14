@@ -1,0 +1,63 @@
+{
+    "templates": [
+        {
+            "name": "Meeting",
+            "trigger": {
+                "calendar_event": true,
+                "keywords": [
+                    "meeting",
+                    "class",
+                    "zoom",
+                    "chat"
+                ],
+                "apps": [
+                    "com.skype.raider",
+                    "com.zoom.videomeetings"
+                ]
+            },
+            "actions": {
+                "ringer_mode": "VIBRATE",
+                "do_not_disturb": true,
+                "auto_reply": "I am currently in a meeting."
+            }
+        },
+        {
+            "name": "Personal Time",
+            "trigger": {
+                "location": "Home",
+                "time_range": {
+                    "start": "18:00",
+                    "end": "08:00"
+                },
+                "days": [
+                    "Saturday",
+                    "Sunday"
+                ],
+                "apps": [
+                    "com.google.android.youtube",
+                    "com.audible.application"
+                ]
+            },
+            "actions": {
+                "ringer_mode": "NORMAL",
+                "do_not_disturb": false,
+                "screen_brightness": "Auto"
+            }
+        },
+        {
+            "name": "Travel",
+            "trigger": {
+                "activity": "in_vehicle",
+                "apps": [
+                    "com.google.android.apps.maps",
+                    "com.waze"
+                ]
+            },
+            "actions": {
+                "ringer_mode": "SILENT",
+                "do_not_disturb": true,
+                "driving_mode": true
+            }
+        }
+    ]
+}

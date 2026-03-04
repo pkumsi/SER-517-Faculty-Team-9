@@ -11,9 +11,10 @@ import "fmt"
 //   - Structured Context Block (dynamic, built from InferredElements)
 //
 // The three variants correspond directly to Task #20 (Aniket Patil) findings:
-//   Minimal  → Combo 6: Activity + Response Time (Good, best privacy ratio)
-//   Rich     → Combo 2: Activity + Time + Sender + Urgency (Good, social tone)
-//   Standard → Combo 3: All 5 elements (Excellent, recommended default)
+//
+//	Minimal  → Combo 6: Activity + Response Time (Good, best privacy ratio)
+//	Rich     → Combo 2: Activity + Time + Sender + Urgency (Good, social tone)
+//	Standard → Combo 3: All 5 elements (Excellent, recommended default)
 func buildPrompt(elements *InferredElements) string {
 	systemInstruction := buildSystemInstruction()
 	contextBlock := buildContextBlock(elements)
@@ -39,7 +40,10 @@ Rules:
 - Adjust tone based on sender relationship: formal for managers or colleagues, casual for friends.
 - Always set a realistic expectation for when the user will respond.
 - Keep the response concise: 1 to 3 sentences maximum.
-- Do not mention raw sensor data, device state, noise levels, or battery information.`
+- Do not mention raw sensor data, device state, noise levels, or battery information.
+- Generate exactly ONE response only. Do not provide multiple options or variations.
+- Do not use placeholder text like [User's Name]. Use the actual name provided in the context.
+- Do not add any explanation, commentary, or follow-up questions after the response.`
 }
 
 // buildContextBlock assembles the structured context block passed to the LLM.
@@ -115,7 +119,8 @@ func buildRichContext(elements *InferredElements) string {
 //
 // This is the recommended default configuration per Task #25.
 // "Specific time estimate sets clear expectations.
-//  Professional tone matches sender relationship." — Task #20 Combo 3
+//
+//	Professional tone matches sender relationship." — Task #20 Combo 3
 func buildStandardContext(elements *InferredElements) string {
 	context := ""
 

@@ -2,14 +2,9 @@ package services
 
 import (
 	"errors"
-
-	"github.com/joho/godotenv"
+	
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/models"
 )
-
-func init() {
-	godotenv.Load()
-}
 
 // GenerateAutoResponse is the single public entry point for the LLM response pipeline.
 // It orchestrates the full flow established in Sprint 1 research and Task #25 (Prerana Kumsi):

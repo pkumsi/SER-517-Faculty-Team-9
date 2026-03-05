@@ -15,7 +15,8 @@ type Config struct {
 	Server   ServerConfig
 	Logging  LoggingConfig
 	API      APIConfig
-	OpenAI   OpenAIConfig
+	// OpenAI   OpenAIConfig
+	LLM      LLMConfig
 	Metrics  MetricsConfig
 }
 
@@ -39,10 +40,16 @@ type APIConfig struct {
 }
 
 // struct for OpenAI integration settings - can be changed to differnent AI provider in the future if needed
-type OpenAIConfig struct {
-	APIKey    string
-	Model     string
-	MaxTokens int
+// type OpenAIConfig struct {
+// 	APIKey    string
+// 	Model     string
+// 	MaxTokens int
+// 	OpenRouterAPIKey string
+// }
+type LLMConfig struct {
+    OpenRouterAPIKey string
+    Model            string
+    MaxTokens        int
 }
 
 // struct for monitoring configuration
@@ -73,10 +80,16 @@ func LoadConfig() (*Config, error) {
 			Version: getEnv("API_VERSION", "v1"),
 			Timeout: getEnvAsDuration("API_TIMEOUT", 30*time.Second),
 		},
-		OpenAI: OpenAIConfig{
-			APIKey:    getEnv("OPENAI_API_KEY", ""),
-			Model:     getEnv("OPENAI_MODEL", "gpt-4"),
-			MaxTokens: getEnvAsInt("OPENAI_MAX_TOKENS", 1000),
+		// OpenAI: OpenAIConfig{
+		// 	APIKey:    getEnv("OPENAI_API_KEY", ""),
+		// 	Model:     getEnv("OPENAI_MODEL", "gpt-4"),
+		// 	MaxTokens: getEnvAsInt("OPENAI_MAX_TOKENS", 1000),
+		// 	OpenRouterAPIKey: getEnv("OPENROUTER_API_KEY", ""),
+		// },
+		LLM: LLMConfig{
+			OpenRouterAPIKey: getEnv("OPENROUTER_API_KEY", ""),
+			Model:            getEnv("LLM_MODEL", "google/gemma-3-4b-it:free"),
+			MaxTokens:        getEnvAsInt("LLM_MAX_TOKENS", 1000),
 		},
 		Metrics: MetricsConfig{
 			Enabled: getEnvAsBool("ENABLE_METRICS", true),
@@ -94,9 +107,9 @@ func LoadConfig() (*Config, error) {
 
 // Validate checks if required configuration values are set
 func (c *Config) Validate() error {
-	// Check if OpenAI API key is set 
-	if c.OpenAI.APIKey == "" {
-		return fmt.Errorf("OPENAI_API_KEY is required but not set")
+	// right it only validates open router api key because that what we are using we can later add validation for other llm providers if we add support for them in the future
+	if c.LLM.OpenRouterAPIKey == "" {
+		return fmt.Errorf("OPENROUTER_API_KEY is required but not set")
 	}
 
 	// Validate log level

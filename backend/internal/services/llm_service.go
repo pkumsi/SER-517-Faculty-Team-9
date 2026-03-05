@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	
+
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/models"
 )
 
@@ -11,8 +11,9 @@ import (
 //
 //	Sensor Data → Inference → Prompt Assembly → LLM → Auto-Response
 //
-// Returns a populated LLMResponseResult or an error if the pipeline fails.
-func GenerateAutoResponse(req *models.LLMResponseRequest) (*models.LLMResponseResult, error) {
+// model and apiKey are passed in from the handler which reads them from configs.LLMConfig.
+// This ensures all configuration flows from .env → config → handler → service → llm.
+func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey string) (*models.LLMResponseResult, error) {
 	// Step 1 — Validate request
 	// Activity is the single most critical element — Task #23 Context Selection Guidelines:
 	// "Activity — Always required. If unavailable, do not generate a response."
@@ -37,10 +38,10 @@ func GenerateAutoResponse(req *models.LLMResponseRequest) (*models.LLMResponseRe
 	// Selects Minimal / Standard / Rich variant based on available elements — Task #25
 	prompt := buildPrompt(elements)
 
-	// Step 5 — Call the LLM with the constructed prompt
-	response, err := callLLM(prompt)
+	// Step 5 — Call the LLM with the constructed prompt, model, and apiKey
+	response, err := callLLM(prompt, model, apiKey)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("auto-response generation failed. The AI service is currently unavailable or took too long to respond. Please try again in a few seconds")
 	}
 
 	// Step 6 — Assemble and return LLMResponseResult

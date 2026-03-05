@@ -22,7 +22,7 @@ func main() {
 	fmt.Printf("Environment: %s\n", cfg.Server.Environment)
 	fmt.Printf("Server: http://%s\n", cfg.GetServerAddress())
 	fmt.Printf("Log Level: %s\n", cfg.Logging.Level)
-	fmt.Printf("OpenAI Model: %s\n", cfg.OpenAI.Model)
+	fmt.Printf("LLM Model: %s\n", cfg.LLM.Model)
 	fmt.Printf("Metrics Enabled: %v\n\n", cfg.Metrics.Enabled)
 
 	r := gin.Default()
@@ -35,12 +35,16 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
+	// Instantiate handler with config so LLM settings flow from
+	// .env → configs.LLMConfig → handler → service → llm client
+	llmHandler := handlers.NewLLMHandler(cfg)
+
 	// LLM response generation endpoint
 	// POST /api/v1/response
 	// Accepts LLMResponseRequest, returns LLMResponseResult
 	v1 := r.Group("/api/v1")
 	{
-		v1.POST("/response", handlers.GenerateAutoResponse)
+		v1.POST("/response", llmHandler.GenerateAutoResponse)
 	}
 
 	serverAddr := ":" + cfg.Server.Port
@@ -50,6 +54,8 @@ func main() {
 	fmt.Printf("  GET  http://localhost%s/\n", serverAddr)
 	fmt.Printf("  GET  http://localhost%s/health\n", serverAddr)
 	fmt.Printf("  POST http://localhost%s/api/v1/response\n", serverAddr)
+	fmt.Printf("OpenRouter API Key loaded: %v\n", cfg.LLM.OpenRouterAPIKey != "")
+	fmt.Printf("LLM Model: %s\n", cfg.LLM.Model)
 
 	// Start Gin server
 	if err := r.Run(serverAddr); err != nil {

@@ -1,64 +1,76 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
+    "log"
+    "net/http"
+    "os"
 
-	"github.com/gin-gonic/gin"
-	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/configs"
-	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/handlers"
+    "github.com/gin-gonic/gin"
+    "github.com/pkumsi/SER-517-Faculty-Team-9/backend/configs"
+    "github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/handlers"
 )
 
 func main() {
-	// Load configuration
-	cfg, err := configs.LoadConfig()
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
-	}
+    // Open or create a log file
+    logFile, err := os.OpenFile("api.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+    if err != nil {
+        log.Fatalf("Failed to open log file: %v", err)
+    }
+    defer logFile.Close()
 
-	// Debug info
-	fmt.Printf("\n Starting API Server\n")
-	fmt.Printf("Environment: %s\n", cfg.Server.Environment)
-	fmt.Printf("Server: http://%s\n", cfg.GetServerAddress())
-	fmt.Printf("Log Level: %s\n", cfg.Logging.Level)
-	fmt.Printf("LLM Model: %s\n", cfg.LLM.Model)
-	fmt.Printf("Metrics Enabled: %v\n\n", cfg.Metrics.Enabled)
+    // Set log output to the file
+    log.SetOutput(logFile)
 
-	r := gin.Default()
+    // Load configuration
+    cfg, err := configs.LoadConfig()
+    if err != nil {
+        log.Fatalf("Failed to load configuration: %v", err)
+    }
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "API running"})
-	})
+    // Debug info
+    log.Println("Starting API Server")
+    log.Printf("Environment: %s", cfg.Server.Environment)
+    log.Printf("Server: http://%s", cfg.GetServerAddress())
+    log.Printf("Log Level: %s", cfg.Logging.Level)
+    log.Printf("LLM Model: %s", cfg.LLM.Model)
+    log.Printf("Metrics Enabled: %v", cfg.Metrics.Enabled)
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+    r := gin.Default()
 
-	// Instantiate handler with config so LLM settings flow from
-	// .env → configs.LLMConfig → handler → service → llm client
-	llmHandler := handlers.NewLLMHandler(cfg)
+    r.GET("/", func(c *gin.Context) {
+        log.Println("Root endpoint hit")
+        c.JSON(http.StatusOK, gin.H{"message": "API running"})
+    })
 
-	// LLM response generation endpoint
-	// POST /api/v1/response
-	// Accepts LLMResponseRequest, returns LLMResponseResult
-	v1 := r.Group("/api/v1")
-	{
-		v1.POST("/response", llmHandler.GenerateAutoResponse)
-	}
+    r.GET("/health", func(c *gin.Context) {
+        log.Println("Health endpoint hit")
+        c.JSON(http.StatusOK, gin.H{"status": "ok"})
+    })
 
-	serverAddr := ":" + cfg.Server.Port
+    // Instantiate handler with config so LLM settings flow from
+    // .env → configs.LLMConfig → handler → service → llm client
+    llmHandler := handlers.NewLLMHandler(cfg)
 
-	fmt.Printf("Listening on %s\n", serverAddr)
-	fmt.Printf("Endpoints:\n")
-	fmt.Printf("  GET  http://localhost%s/\n", serverAddr)
-	fmt.Printf("  GET  http://localhost%s/health\n", serverAddr)
-	fmt.Printf("  POST http://localhost%s/api/v1/response\n", serverAddr)
-	fmt.Printf("OpenRouter API Key loaded: %v\n", cfg.LLM.OpenRouterAPIKey != "")
-	fmt.Printf("LLM Model: %s\n", cfg.LLM.Model)
+    // LLM response generation endpoint
+    // POST /api/v1/response
+    // Accepts LLMResponseRequest, returns LLMResponseResult
+    v1 := r.Group("/api/v1")
+    {
+        v1.POST("/response", llmHandler.GenerateAutoResponse)
+    }
 
-	// Start Gin server
-	if err := r.Run(serverAddr); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
-	}
+    serverAddr := ":" + cfg.Server.Port
+
+    log.Printf("Listening on %s", serverAddr)
+    log.Printf("Endpoints:")
+    log.Printf("  GET  http://localhost%s/", serverAddr)
+    log.Printf("  GET  http://localhost%s/health", serverAddr)
+    log.Printf("  POST http://localhost%s/api/v1/response", serverAddr)
+    log.Printf("OpenRouter API Key loaded: %v", cfg.LLM.OpenRouterAPIKey != "")
+	log.Printf("LLM Model: %s", cfg.LLM.Model)
+
+    // Start Gin server
+    if err := r.Run(serverAddr); err != nil {
+        log.Fatalf("Server failed to start: %v", err)
+    }
 }

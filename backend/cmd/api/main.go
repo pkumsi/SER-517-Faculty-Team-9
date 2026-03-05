@@ -5,6 +5,7 @@ import (
     "net/http"
     "os"
 
+    "github.com/Depado/ginprom"
     "github.com/gin-gonic/gin"
     "github.com/pkumsi/SER-517-Faculty-Team-9/backend/configs"
     "github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/handlers"
@@ -37,6 +38,13 @@ func main() {
 
     r := gin.Default()
 
+    // Add Prometheus middleware
+    p := ginprom.New(
+        ginprom.Engine(r),
+        ginprom.Path("/metrics"), // Expose metrics at /metrics
+    )
+    r.Use(p.Instrument())
+
     r.GET("/", func(c *gin.Context) {
         log.Println("Root endpoint hit")
         c.JSON(http.StatusOK, gin.H{"message": "API running"})
@@ -67,7 +75,7 @@ func main() {
     log.Printf("  GET  http://localhost%s/health", serverAddr)
     log.Printf("  POST http://localhost%s/api/v1/response", serverAddr)
     log.Printf("OpenRouter API Key loaded: %v", cfg.LLM.OpenRouterAPIKey != "")
-	log.Printf("LLM Model: %s", cfg.LLM.Model)
+    log.Printf("LLM Model: %s", cfg.LLM.Model)
 
     // Start Gin server
     if err := r.Run(serverAddr); err != nil {

@@ -1,23 +1,14 @@
-# Logger Guide
+#### Log File
+- Filename: api.log
+- Location: Root directory
+- Format: [API] YYYY/MM/DD HH:MM:SS file.go:line: message
 
-This guide explains how logging is set up in the application and how to use it effectively.
+#### Setup
 
----
+The logger is initialized in main.go. It opens the file in append mode, meaning it won't overwrite previous logs on restart.
 
-## Overview
-
-The application uses Go's built-in `log` package for logging. Logs are written to both the console and a log file (`api.log`) for persistent storage. The log file is created in the same directory as the application.
-
----
-
-## Features
-
-- **Log Levels**: The application supports different log levels (e.g., `info`, `debug`, `warn`, `error`) based on the configuration.
-- **Log File**: All logs are written to `api.log` in append mode.
-- **Request Logging**: Each API request is logged with details such as HTTP method, path, status code, and duration.
-
----
-
-## Log File Location
-
-The log file is created in the same directory as the application:
+#### Key Logs Collected
+-Server start/stop events
+-Environment and Config loading (LLM Model, Port, etc.)
+-Endpoint hits (/, /health, /api/v1/response)
+-OpenRouter API key status

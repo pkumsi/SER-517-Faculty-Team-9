@@ -12,12 +12,12 @@ import (
 
 // struct for all configuration for the application
 type Config struct {
-	Server   ServerConfig
-	Logging  LoggingConfig
-	API      APIConfig
+	Server  ServerConfig
+	Logging LoggingConfig
+	API     APIConfig
 	// OpenAI   OpenAIConfig
-	LLM      LLMConfig
-	Metrics  MetricsConfig
+	LLM     LLMConfig
+	Metrics MetricsConfig
 }
 
 // struct for server-related configuration
@@ -40,16 +40,17 @@ type APIConfig struct {
 }
 
 // struct for OpenAI integration settings - can be changed to differnent AI provider in the future if needed
-// type OpenAIConfig struct {
-// 	APIKey    string
-// 	Model     string
-// 	MaxTokens int
-// 	OpenRouterAPIKey string
-// }
+//
+//	type OpenAIConfig struct {
+//		APIKey    string
+//		Model     string
+//		MaxTokens int
+//		OpenRouterAPIKey string
+//	}
 type LLMConfig struct {
-    OpenRouterAPIKey string
-    Model            string
-    MaxTokens        int
+	OpenRouterAPIKey string
+	Model            string
+	MaxTokens        int
 }
 
 // struct for monitoring configuration
@@ -62,7 +63,7 @@ type MetricsConfig struct {
 func LoadConfig() (*Config, error) {
 	// Load .env file if it exists (for local development)
 	// In production, environment variables should be set by the system
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load("/Users/pshar169/Documents/SER-517-Faculty-Team-9/backend/configs/.env"); err != nil {
 		log.Println("No .env file found, using system environment variables")
 	}
 

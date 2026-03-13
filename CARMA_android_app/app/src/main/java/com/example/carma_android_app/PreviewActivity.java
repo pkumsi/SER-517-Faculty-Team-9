@@ -1,6 +1,7 @@
 package com.example.carma_android_app;
 
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -51,6 +52,9 @@ public class PreviewActivity extends AppCompatActivity {
     // State variables
     private boolean isContextExpanded = true;
     private int secondsRemaining = 214; // 3:34 in seconds
+    private static final long INITIAL_TIME_MILLIS = 214000; // 214 seconds in milliseconds
+    private CountDownTimer countdownTimer;
+    private boolean isTimerRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +69,9 @@ public class PreviewActivity extends AppCompatActivity {
 
         // Load initial data
         loadPreviewData();
+
+        // Start the countdown timer
+        startCountdownTimer();
     }
 
 
@@ -165,6 +172,75 @@ public class PreviewActivity extends AppCompatActivity {
         int seconds = secondsRemaining % 60;
         String timerText = String.format("Sending in %d:%02d", minutes, seconds);
         tvTimer.setText(timerText);
+    }
+
+    private void startCountdownTimer() {
+        // Cancel any existing timer
+        if (countdownTimer != null) {
+            countdownTimer.cancel();
+        }
+
+        // Create and start new countdown timer
+        countdownTimer = new CountDownTimer(INITIAL_TIME_MILLIS, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                // Update secondsRemaining based on milliseconds remaining
+                secondsRemaining = (int) (millisUntilFinished / 1000);
+                updateTimerDisplay();
+            }
+
+            @Override
+            public void onFinish() {
+                // Timer finished - auto-send the message
+                secondsRemaining = 0;
+                updateTimerDisplay();
+                isTimerRunning = false;
+                handleAutoSend();
+            }
+        };
+
+        countdownTimer.start();
+        isTimerRunning = true;
+    }
+
+    private void pauseCountdownTimer() {
+        if (countdownTimer != null && isTimerRunning) {
+            countdownTimer.cancel();
+            isTimerRunning = false;
+        }
+    }
+
+    private void resumeCountdownTimer() {
+        if (!isTimerRunning && secondsRemaining > 0) {
+            // Resume timer with remaining time
+            if (countdownTimer != null) {
+                countdownTimer.cancel();
+            }
+
+            countdownTimer = new CountDownTimer(secondsRemaining * 1000, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    secondsRemaining = (int) (millisUntilFinished / 1000);
+                    updateTimerDisplay();
+                }
+
+                @Override
+                public void onFinish() {
+                    secondsRemaining = 0;
+                    updateTimerDisplay();
+                    isTimerRunning = false;
+                    handleAutoSend();
+                }
+            };
+
+            countdownTimer.start();
+            isTimerRunning = true;
+        }
+    }
+
+    private void handleAutoSend() {
+        // Auto-send when timer reaches zero
+        handleSendNow();
     }
 
 
@@ -282,18 +358,25 @@ public class PreviewActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // TODO: Pause countdown timer if running
+        // Pause countdown timer if running
+        pauseCountdownTimer();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // TODO: Resume countdown timer if needed
+        // Resume countdown timer if needed
+        resumeCountdownTimer();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // TODO: Clean up resources, cancel timers
+        // Clean up resources, cancel timers
+        if (countdownTimer != null) {
+            countdownTimer.cancel();
+            countdownTimer = null;
+            isTimerRunning = false;
+        }
     }
 }

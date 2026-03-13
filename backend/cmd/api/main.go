@@ -58,6 +58,7 @@ func main() {
     // Instantiate handler with config so LLM settings flow from
     // .env → configs.LLMConfig → handler → service → llm client
     llmHandler := handlers.NewLLMHandler(cfg)
+    feedbackHandler := handlers.NewFeedbackHandler()
 
     // LLM response generation endpoint
     // POST /api/v1/response
@@ -65,6 +66,7 @@ func main() {
     v1 := r.Group("/api/v1")
     {
         v1.POST("/response", llmHandler.GenerateAutoResponse)
+        v1.POST("/feedback", feedbackHandler.SubmitFeedback)
     }
 
     serverAddr := ":" + cfg.Server.Port

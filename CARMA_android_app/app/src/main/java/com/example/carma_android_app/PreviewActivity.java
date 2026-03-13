@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -186,7 +187,7 @@ public class PreviewActivity extends AppCompatActivity {
     private void handleThumbsUp() {
         // TODO: Send positive feedback to backend
         // Visual feedback
-        btnThumbsUp.setColorFilter(getResources().getColor(android.R.color.holo_green_dark));
+        btnThumbsUp.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_green_dark));
         btnThumbsDown.clearColorFilter();
 
         // Could show a toast
@@ -197,7 +198,7 @@ public class PreviewActivity extends AppCompatActivity {
     private void handleThumbsDown() {
         // TODO: Send negative feedback to backend
         // Visual feedback
-        btnThumbsDown.setColorFilter(getResources().getColor(android.R.color.holo_red_dark));
+        btnThumbsDown.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_red_dark));
         btnThumbsUp.clearColorFilter();
 
         // Could show a toast
@@ -229,7 +230,7 @@ public class PreviewActivity extends AppCompatActivity {
 
         if (tvEditable.getText().toString().equals("EDITABLE")) {
             tvEditable.setText("EDITING...");
-            tvEditable.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
+            tvEditable.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_dark));
         }
 
         // Could show a toast

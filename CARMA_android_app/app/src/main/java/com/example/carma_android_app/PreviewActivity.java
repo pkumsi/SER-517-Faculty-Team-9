@@ -194,7 +194,7 @@ public class PreviewActivity extends AppCompatActivity {
 
     private void bindContextChips(String activity, String sender, String urgency) {
         chipActivity.setText("Activity: " + activity);
-        chipSender.setText("Sender: " + urgency); // small bug: wrong value assigned here
+        chipSender.setText("Sender: " + sender);
         chipUrgency.setText("Urgency: " + urgency);
     }
 

@@ -296,4 +296,4 @@ public class PreviewActivity extends AppCompatActivity {
         super.onDestroy();
         // TODO: Clean up resources, cancel timers
     }
-}Ï
+}

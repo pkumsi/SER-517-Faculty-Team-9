@@ -3,24 +3,20 @@ package main
 import (
     "log"
     "net/http"
-    "os"
 
     "github.com/Depado/ginprom"
     "github.com/gin-gonic/gin"
     "github.com/pkumsi/SER-517-Faculty-Team-9/backend/configs"
     "github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/handlers"
+    "github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/logger"
 )
 
 func main() {
-    // Open or create a log file
-    logFile, err := os.OpenFile("api.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+    logFile, err := logger.Init("api.log")
     if err != nil {
         log.Fatalf("Failed to open log file: %v", err)
     }
     defer logFile.Close()
-
-    // Set log output to the file
-    log.SetOutput(logFile)
 
     // Load configuration
     cfg, err := configs.LoadConfig()

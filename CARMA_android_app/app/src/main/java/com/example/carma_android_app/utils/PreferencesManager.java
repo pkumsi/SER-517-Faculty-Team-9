@@ -4,12 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import java.util.HashSet;
 import java.util.Set;
-import com.example.carma_android_app.constants.Constants;
+import com.example.carma_android_app.utils.Constants;
 
-/**
- * Manager class for handling SharedPreferences operations Provides centralized
- * access to app settings and user preferences
- */
 public class PreferencesManager {
 
     private static PreferencesManager instance;

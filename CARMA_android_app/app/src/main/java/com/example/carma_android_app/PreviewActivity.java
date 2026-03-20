@@ -1,5 +1,6 @@
 package com.example.carma_android_app;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
@@ -7,13 +8,15 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import com.example.carma_android_app.network.ApiClient;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
-
+import org.json.JSONObject;
 
 public class PreviewActivity extends AppCompatActivity {
 
@@ -56,6 +59,9 @@ public class PreviewActivity extends AppCompatActivity {
     private static final long INITIAL_TIME_MILLIS = 214000; // 214 seconds in milliseconds
     private CountDownTimer countdownTimer;
     private boolean isTimerRunning = false;
+
+    private String requestId = "demo-request-id"; // TODO: Replace with real request ID
+    private String uuid = "demo-uuid"; // TODO: Replace with real UUID
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -300,24 +306,50 @@ public class PreviewActivity extends AppCompatActivity {
 
 
     private void handleThumbsUp() {
-        // TODO: Send positive feedback to backend
-        // Visual feedback
-        btnThumbsUp.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_green_dark));
+        btnThumbsUp.setColorFilter(getResources().getColor(android.R.color.holo_green_dark));
         btnThumbsDown.clearColorFilter();
-
-        // Could show a toast
-        // Toast.makeText(this, "Thanks for your feedback!", Toast.LENGTH_SHORT).show();
+        sendFeedbackToBackend(true);
     }
 
 
     private void handleThumbsDown() {
-        // TODO: Send negative feedback to backend
-        // Visual feedback
-        btnThumbsDown.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+        btnThumbsDown.setColorFilter(getResources().getColor(android.R.color.holo_red_dark));
         btnThumbsUp.clearColorFilter();
+        sendFeedbackToBackend(false);
+    }
 
-        // Could show a toast
-        // Toast.makeText(this, "Thanks for your feedback!", Toast.LENGTH_SHORT).show();
+    private void sendFeedbackToBackend(boolean like) {
+        // Build JSON body
+        try {
+            JSONObject json = new JSONObject();
+            json.put("request_id", requestId);
+            json.put("uuid", uuid);
+            json.put("like", like);
+            String body = json.toString();
+            new FeedbackTask().execute(body);
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to build feedback request", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private class FeedbackTask extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... params) {
+            try {
+                String response = ApiClient.getInstance().sendFeedback(params[0]);
+                return response != null;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (success) {
+                Toast.makeText(PreviewActivity.this, "Thanks for your feedback!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(PreviewActivity.this, "Failed to send feedback", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
 

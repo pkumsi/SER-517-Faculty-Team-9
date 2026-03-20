@@ -81,7 +81,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@android:drawable/ic_lock_idle_alarm"
-                        app:tint="#2196F3" />
+                        android:tint="#2196F3" />
 
                     <TextView
                         android:id="@+id/tv_timer"
@@ -100,9 +100,11 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@android:drawable/ic_input_add"
+                        android:src="@drawable/ic_thumbs_up"
                         android:contentDescription="Thumbs up"
-                        app:tint="#757575" />
+                        android:tint="#757575"
+                        android:scaleType="fitCenter"
+                        android:padding="10dp" />
 
                     <!-- Thumbs Down Button -->
                     <ImageButton
@@ -110,10 +112,12 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@android:drawable/ic_delete"
+                        android:src="@drawable/ic_thumbs_down"
                         android:contentDescription="Thumbs down"
-                        android:layout_marginStart="8dp"
-                        app:tint="#757575" />
+                        android:tint="#757575"
+                        android:scaleType="fitCenter"
+                        android:padding="10dp"
+                        android:layout_marginStart="8dp" />
 
                 </LinearLayout>
 
@@ -160,7 +164,7 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:src="@android:drawable/arrow_up_float"
-                                app:tint="#757575" />
+                                android:tint="#757575" />
                         </LinearLayout>
 
                         <!-- Context Description (Collapsible) -->

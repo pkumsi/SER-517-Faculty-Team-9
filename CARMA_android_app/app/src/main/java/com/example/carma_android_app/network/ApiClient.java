@@ -63,6 +63,38 @@ public class ApiClient {
     }
 
     /**
+     * Send feedback (like/dislike) to backend
+     * @param requestBody JSON request body
+     * @return API response as String
+     */
+    public String sendFeedback(String requestBody) throws IOException {
+        URL url = new URL(Constants.API_BASE_URL + "/api/v1/feedback");
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        try {
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = requestBody.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (Scanner scanner = new Scanner(connection.getInputStream())) {
+                    scanner.useDelimiter("\\A");
+                    return scanner.hasNext() ? scanner.next() : "";
+                }
+            } else {
+                throw new IOException("HTTP error code: " + responseCode);
+            }
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    /**
      * Health check endpoint
      */
     public boolean checkHealth() {

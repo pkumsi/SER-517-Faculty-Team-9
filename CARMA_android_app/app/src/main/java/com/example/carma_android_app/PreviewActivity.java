@@ -1,17 +1,22 @@
 package com.example.carma_android_app;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import com.example.carma_android_app.network.ApiClient;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
-
+import org.json.JSONObject;
 
 public class PreviewActivity extends AppCompatActivity {
 
@@ -51,6 +56,12 @@ public class PreviewActivity extends AppCompatActivity {
     // State variables
     private boolean isContextExpanded = true;
     private int secondsRemaining = 214; // 3:34 in seconds
+    private static final long INITIAL_TIME_MILLIS = 214000; // 214 seconds in milliseconds
+    private CountDownTimer countdownTimer;
+    private boolean isTimerRunning = false;
+
+    private String requestId = "demo-request-id"; // TODO: Replace with real request ID
+    private String uuid = "demo-uuid"; // TODO: Replace with real UUID
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +76,9 @@ public class PreviewActivity extends AppCompatActivity {
 
         // Load initial data
         loadPreviewData();
+
+        // Start the countdown timer
+        startCountdownTimer();
     }
 
 
@@ -206,6 +220,75 @@ public class PreviewActivity extends AppCompatActivity {
         tvTimer.setText(timerText);
     }
 
+    private void startCountdownTimer() {
+        // Cancel any existing timer
+        if (countdownTimer != null) {
+            countdownTimer.cancel();
+        }
+
+        // Create and start new countdown timer
+        countdownTimer = new CountDownTimer(INITIAL_TIME_MILLIS, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                // Update secondsRemaining based on milliseconds remaining
+                secondsRemaining = (int) (millisUntilFinished / 1000);
+                updateTimerDisplay();
+            }
+
+            @Override
+            public void onFinish() {
+                // Timer finished - auto-send the message
+                secondsRemaining = 0;
+                updateTimerDisplay();
+                isTimerRunning = false;
+                handleAutoSend();
+            }
+        };
+
+        countdownTimer.start();
+        isTimerRunning = true;
+    }
+
+    private void pauseCountdownTimer() {
+        if (countdownTimer != null && isTimerRunning) {
+            countdownTimer.cancel();
+            isTimerRunning = false;
+        }
+    }
+
+    private void resumeCountdownTimer() {
+        if (!isTimerRunning && secondsRemaining > 0) {
+            // Resume timer with remaining time
+            if (countdownTimer != null) {
+                countdownTimer.cancel();
+            }
+
+            countdownTimer = new CountDownTimer(secondsRemaining * 1000, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    secondsRemaining = (int) (millisUntilFinished / 1000);
+                    updateTimerDisplay();
+                }
+
+                @Override
+                public void onFinish() {
+                    secondsRemaining = 0;
+                    updateTimerDisplay();
+                    isTimerRunning = false;
+                    handleAutoSend();
+                }
+            };
+
+            countdownTimer.start();
+            isTimerRunning = true;
+        }
+    }
+
+    private void handleAutoSend() {
+        // Auto-send when timer reaches zero
+        handleSendNow();
+    }
+
 
     private void toggleContextSection() {
         if (isContextExpanded) {
@@ -223,24 +306,50 @@ public class PreviewActivity extends AppCompatActivity {
 
 
     private void handleThumbsUp() {
-        // TODO: Send positive feedback to backend
-        // Visual feedback
         btnThumbsUp.setColorFilter(getResources().getColor(android.R.color.holo_green_dark));
         btnThumbsDown.clearColorFilter();
-
-        // Could show a toast
-        // Toast.makeText(this, "Thanks for your feedback!", Toast.LENGTH_SHORT).show();
+        sendFeedbackToBackend(true);
     }
 
 
     private void handleThumbsDown() {
-        // TODO: Send negative feedback to backend
-        // Visual feedback
         btnThumbsDown.setColorFilter(getResources().getColor(android.R.color.holo_red_dark));
         btnThumbsUp.clearColorFilter();
+        sendFeedbackToBackend(false);
+    }
 
-        // Could show a toast
-        // Toast.makeText(this, "Thanks for your feedback!", Toast.LENGTH_SHORT).show();
+    private void sendFeedbackToBackend(boolean like) {
+        // Build JSON body
+        try {
+            JSONObject json = new JSONObject();
+            json.put("request_id", requestId);
+            json.put("uuid", uuid);
+            json.put("like", like);
+            String body = json.toString();
+            new FeedbackTask().execute(body);
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to build feedback request", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private class FeedbackTask extends AsyncTask<String, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... params) {
+            try {
+                String response = ApiClient.getInstance().sendFeedback(params[0]);
+                return response != null;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (success) {
+                Toast.makeText(PreviewActivity.this, "Thanks for your feedback!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(PreviewActivity.this, "Failed to send feedback", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
 
@@ -268,7 +377,7 @@ public class PreviewActivity extends AppCompatActivity {
 
         if (tvEditable.getText().toString().equals("EDITABLE")) {
             tvEditable.setText("EDITING...");
-            tvEditable.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
+            tvEditable.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_dark));
         }
 
         // Could show a toast
@@ -321,18 +430,25 @@ public class PreviewActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // TODO: Pause countdown timer if running
+        // Pause countdown timer if running
+        pauseCountdownTimer();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // TODO: Resume countdown timer if needed
+        // Resume countdown timer if needed
+        resumeCountdownTimer();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // TODO: Clean up resources, cancel timers
+        // Clean up resources, cancel timers
+        if (countdownTimer != null) {
+            countdownTimer.cancel();
+            countdownTimer = null;
+            isTimerRunning = false;
+        }
     }
 }

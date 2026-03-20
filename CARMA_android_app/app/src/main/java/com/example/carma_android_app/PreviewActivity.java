@@ -12,11 +12,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import com.example.carma_android_app.network.ApiClient;
+import com.example.carma_android_app.models.PreviewScreenData;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 import org.json.JSONObject;
+import java.util.Arrays;
 
 public class PreviewActivity extends AppCompatActivity {
 
@@ -62,6 +64,9 @@ public class PreviewActivity extends AppCompatActivity {
 
     private String requestId = "demo-request-id"; // TODO: Replace with real request ID
     private String uuid = "demo-uuid"; // TODO: Replace with real UUID
+
+    // Preview screen data model
+    private PreviewScreenData previewScreenData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -162,16 +167,29 @@ public class PreviewActivity extends AppCompatActivity {
     private void loadPreviewData() {
         // TODO: Fetch data from backend API
         // For now, using hardcoded values from layout
-
+        previewScreenData = new PreviewScreenData(
+            "Sarah Jenkins", // recipientName
+            "I'll be in a meeting until 3:30pm. Will reply after.", // messageContent
+            "Sending in 3:34", // timerText
+            Arrays.asList("In a meeting", "Manager", "High"), // contextTags
+            true, // arEnabled
+            true, // sentAR
+            false, // liked
+            requestId,
+            uuid
+        );
         // Set recipient name
-        tvRecipientName.setText("Sarah Jenkins");
-
+        tvRecipientName.setText(previewScreenData.getRecipientName());
+        // Set message content
+        tvMessageContent.setText(previewScreenData.getMessageContent());
         // Update timer display
-        updateTimerDisplay();
-
-        // Setup context detection based on message content
-        detectContextFromMessage();
-
+        tvTimer.setText(previewScreenData.getTimerText());
+        // Setup context chips
+        bindContextChips(
+            previewScreenData.getContextTags().get(0),
+            previewScreenData.getContextTags().get(1),
+            previewScreenData.getContextTags().get(2)
+        );
         // Set default bottom navigation selection
         bottomNavigation.setSelectedItemId(R.id.nav_preview);
     }

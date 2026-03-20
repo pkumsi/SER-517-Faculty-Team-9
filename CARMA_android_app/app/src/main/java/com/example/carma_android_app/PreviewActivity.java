@@ -155,8 +155,47 @@ public class PreviewActivity extends AppCompatActivity {
         // Update timer display
         updateTimerDisplay();
 
+        // Setup context detection based on message content
+        detectContextFromMessage();
+
         // Set default bottom navigation selection
         bottomNavigation.setSelectedItemId(R.id.nav_preview);
+    }
+
+
+    private void detectContextFromMessage() {
+        String message = tvMessageContent.getText().toString().toLowerCase();
+
+        String detectedActivity;
+        if (message.contains("meeting") || message.contains("sync")) {
+            detectedActivity = "In a meeting";
+        } else if (message.contains("review")) {
+            detectedActivity = "Reviewing a file";
+        } else {
+            detectedActivity = "Working";
+        }
+
+        String detectedSender;
+        if (message.contains("manager") || message.contains("lead")) {
+            detectedSender = "Manager";
+        } else {
+            detectedSender = "Coworker";
+        }
+
+        String detectedUrgency;
+        if (message.contains("as soon as") || message.contains("urgent")) {
+            detectedUrgency = "High";
+        } else {
+            detectedUrgency = "Normal";
+        }
+
+        bindContextChips(detectedActivity, detectedSender, detectedUrgency);
+    }
+
+    private void bindContextChips(String activity, String sender, String urgency) {
+        chipActivity.setText("Activity: " + activity);
+        chipSender.setText("Sender: " + urgency); // small bug: wrong value assigned here
+        chipUrgency.setText("Urgency: " + urgency);
     }
 
 

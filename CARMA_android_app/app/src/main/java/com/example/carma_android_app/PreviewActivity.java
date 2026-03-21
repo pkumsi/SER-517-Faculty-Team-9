@@ -4,12 +4,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.ImageView;
+import android.app.AlertDialog;
+import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import com.example.carma_android_app.network.ApiClient;
 import com.example.carma_android_app.models.PreviewScreenData;
@@ -381,11 +378,58 @@ public class PreviewActivity extends AppCompatActivity {
 
 
     private void handleAddTag() {
-        // TODO: Show dialog to add new context tag
-        // For now, just a placeholder
+        // Create dialog to add new context tag
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add Context Tag");
 
-        // Could show a toast
-        // Toast.makeText(this, "Add tag feature coming soon", Toast.LENGTH_SHORT).show();
+        // Create EditText for user input
+        final EditText input = new EditText(this);
+        input.setHint("Enter tag name (e.g., Location: Office)");
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        input.setLayoutParams(lp);
+        builder.setView(input);
+
+        // Set up dialog buttons
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            String tagText = input.getText().toString().trim();
+            if (!tagText.isEmpty()) {
+                addNewContextChip(tagText);
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+        builder.show();
+    }
+
+    private void addNewContextChip(String tagText) {
+        // Create new chip programmatically
+        Chip newChip = new Chip(this);
+        newChip.setText(tagText);
+        newChip.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
+        newChip.setChipBackgroundColorResource(android.R.color.holo_blue_light);
+        newChip.setCloseIconVisible(true);
+        newChip.setCloseIconTintResource(android.R.color.holo_blue_dark);
+
+        // Set layout parameters
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.bottomMargin = (int) (8 * getResources().getDisplayMetrics().density); // 8dp margin
+        newChip.setLayoutParams(params);
+
+        // Handle chip removal
+        newChip.setOnCloseIconClickListener(v -> {
+            ((LinearLayout) layoutContextContent).removeView(newChip);
+        });
+
+        // Add chip to the layout (before the "Add" button)
+        int addButtonIndex = ((LinearLayout) layoutContextContent).indexOfChild(chipAdd);
+        ((LinearLayout) layoutContextContent).addView(newChip, addButtonIndex);
     }
 
 

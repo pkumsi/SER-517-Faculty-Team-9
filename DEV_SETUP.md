@@ -13,8 +13,8 @@ macOS install (Homebrew)
 ```
 # Install Temurin 21 (preferred for CI)
 brew install --cask temurin@21
-# or generic cask
-brew install --cask temurin
+# Confirm Java 21 is installed
+java -version   # should report version 21
 ```
 
 macOS install (SDKMAN)

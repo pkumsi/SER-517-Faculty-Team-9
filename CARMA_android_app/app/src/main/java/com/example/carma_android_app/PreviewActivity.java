@@ -1,5 +1,6 @@
 package com.example.carma_android_app;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -24,6 +25,14 @@ import org.json.JSONObject;
 import java.util.Arrays;
 
 public class PreviewActivity extends AppCompatActivity {
+
+    // Intent extra keys — set by ContextInputActivity
+    public static final String EXTRA_MESSAGE_TEXT = "extra_message_text";
+    public static final String EXTRA_REQUEST_ID   = "extra_request_id";
+    public static final String EXTRA_UUID         = "extra_uuid";
+    public static final String EXTRA_ACTIVITY     = "extra_activity";
+    public static final String EXTRA_LOCATION     = "extra_location";
+    public static final String EXTRA_NOTIF_APP    = "extra_notif_app";
 
     // Header views
     private TextView tvHeaderTitle;
@@ -168,33 +177,87 @@ public class PreviewActivity extends AppCompatActivity {
 
 
     private void loadPreviewData() {
-        // TODO: Fetch data from backend API
-        // For now, using hardcoded values from layout
-        previewScreenData = new PreviewScreenData(
-            "Sarah Jenkins", // recipientName
-            "I'll be in a meeting until 3:30pm. Will reply after.", // messageContent
-            "Sending in 3:34", // timerText
-            Arrays.asList("In a meeting", "Manager", "High"), // contextTags
-            true, // arEnabled
-            true, // sentAR
-            false, // liked
-            requestId,
-            uuid
-        );
-        // Set recipient name
+        Intent intent = getIntent();
+
+        // Check if we were launched from ContextInputActivity with real API data
+        boolean hasRealData = intent != null && intent.hasExtra(EXTRA_MESSAGE_TEXT);
+
+        if (hasRealData) {
+            // Populate from backend response passed via Intent
+            String messageText = intent.getStringExtra(EXTRA_MESSAGE_TEXT);
+            requestId          = intent.getStringExtra(EXTRA_REQUEST_ID);
+            uuid               = intent.getStringExtra(EXTRA_UUID);
+            String activity    = intent.getStringExtra(EXTRA_ACTIVITY);
+            String location    = intent.getStringExtra(EXTRA_LOCATION);
+            String notifApp    = intent.getStringExtra(EXTRA_NOTIF_APP);
+
+            // Map raw values back to human-readable chip labels
+            String activityLabel = mapActivityLabel(activity);
+            String senderLabel   = mapNotifAppLabel(notifApp);
+            String locationLabel = (location != null && !location.equals("NoLoc")) ? location : "Unknown location";
+
+            previewScreenData = new PreviewScreenData(
+                "Recipient",    // TODO: pass recipient name from notification in a future task
+                messageText != null ? messageText : "No response generated.",
+                "Sending in 3:34",
+                Arrays.asList(activityLabel, senderLabel, locationLabel),
+                true,
+                false,
+                false,
+                requestId != null ? requestId : "unknown-request-id",
+                uuid != null ? uuid : "unknown-uuid"
+            );
+        } else {
+            // Fallback: demo data when launched directly (e.g. during development)
+            previewScreenData = new PreviewScreenData(
+                "Sarah Jenkins",
+                "I'll be in a meeting until 3:30pm. Will reply after.",
+                "Sending in 3:34",
+                Arrays.asList("In a meeting", "Manager", "High"),
+                true,
+                true,
+                false,
+                requestId,
+                uuid
+            );
+        }
+
+        // Bind to UI
         tvRecipientName.setText(previewScreenData.getRecipientName());
-        // Set message content
         tvMessageContent.setText(previewScreenData.getMessageContent());
-        // Update timer display
         tvTimer.setText(previewScreenData.getTimerText());
-        // Setup context chips
         bindContextChips(
             previewScreenData.getContextTags().get(0),
             previewScreenData.getContextTags().get(1),
             previewScreenData.getContextTags().get(2)
         );
-        // Set default bottom navigation selection
         bottomNavigation.setSelectedItemId(R.id.nav_preview);
+    }
+
+    /** Maps UserAct_Type values back to human-readable labels for the chips. */
+    private String mapActivityLabel(String actType) {
+        if (actType == null) return "Activity unknown";
+        switch (actType) {
+            case "still":      return "Still / Sitting";
+            case "walking":    return "Walking";
+            case "in_vehicle": return "In Vehicle";
+            case "on_bicycle": return "On Bicycle";
+            default:           return "Activity unknown";
+        }
+    }
+
+    /** Maps notification app package name to a readable sender label. */
+    private String mapNotifAppLabel(String pkg) {
+        if (pkg == null) return "Unknown sender";
+        switch (pkg) {
+            case "com.whatsapp":                      return "WhatsApp";
+            case "com.Slack":                         return "Slack";
+            case "com.google.android.gm":             return "Gmail";
+            case "com.facebook.orca":                 return "Messenger";
+            case "com.skype.raider":                  return "Skype";
+            case "com.samsung.android.messaging":     return "SMS";
+            default:                                  return "Message";
+        }
     }
 
 

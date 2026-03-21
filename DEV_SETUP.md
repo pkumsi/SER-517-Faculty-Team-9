@@ -37,7 +37,9 @@ Local Gradle override (optional)
 
 ```
 mkdir -p ~/.gradle
-echo "org.gradle.java.home=$(/usr/libexec/java_home -v21)" >> ~/.gradle/gradle.properties
+# Edit ~/.gradle/gradle.properties and add or update the following line,
+# ensuring org.gradle.java.home is defined only once:
+# org.gradle.java.home=$(/usr/libexec/java_home -v21)
 ```
 
 Build (from repo root)

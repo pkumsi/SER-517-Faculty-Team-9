@@ -3,24 +3,21 @@ package main
 import (
     "log"
     "net/http"
-    "os"
 
     "github.com/Depado/ginprom"
     "github.com/gin-gonic/gin"
     "github.com/pkumsi/SER-517-Faculty-Team-9/backend/configs"
+    "github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/cache"
     "github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/handlers"
+    "github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/logger"
 )
 
 func main() {
-    // Open or create a log file
-    logFile, err := os.OpenFile("api.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+    logFile, err := logger.Init("api.log")
     if err != nil {
         log.Fatalf("Failed to open log file: %v", err)
     }
     defer logFile.Close()
-
-    // Set log output to the file
-    log.SetOutput(logFile)
 
     // Load configuration
     cfg, err := configs.LoadConfig()
@@ -55,9 +52,21 @@ func main() {
         c.JSON(http.StatusOK, gin.H{"status": "ok"})
     })
 
+    var redisCache *cache.RedisCache
+    if cfg.Redis.Enabled {
+        var cacheErr error
+        redisCache, cacheErr = cache.NewRedisCache(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB, cfg.Redis.TTL)
+        if cacheErr != nil {
+            log.Printf("Warning: Redis unavailable, caching disabled: %v", cacheErr)
+        } else {
+            log.Printf("Redis cache connected: %s (TTL: %s)", cfg.Redis.Addr, cfg.Redis.TTL)
+            defer redisCache.Close()
+        }
+    }
+
     // Instantiate handler with config so LLM settings flow from
     // .env → configs.LLMConfig → handler → service → llm client
-    llmHandler := handlers.NewLLMHandler(cfg)
+    llmHandler := handlers.NewLLMHandler(cfg, redisCache)
     feedbackHandler := handlers.NewFeedbackHandler()
 
     // LLM response generation endpoint

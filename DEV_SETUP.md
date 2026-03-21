@@ -67,4 +67,4 @@ CI example (GitHub Actions)
 
 Notes
 
-- The repo requires Java 21 only; vendor lock-in is not enforced. If your organization requires a specific vendor, document it and pin that in CI.
+- The Android/Gradle build requires Java 21; vendor lock-in is not enforced. If your organization requires a specific vendor, document it and pin that in CI. Other components in this repository may have additional or different prerequisites; see their respective setup docs.

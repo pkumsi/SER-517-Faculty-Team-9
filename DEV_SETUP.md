@@ -21,7 +21,7 @@ macOS install (SDKMAN)
 
 ```
 # See official install docs: https://sdkman.io/install
-curl -s "https://get.sdkman.io" -o install_sdkman.sh
+curl -sSfL "https://get.sdkman.io" -o install_sdkman.sh
 # Optionally inspect the script before running it
 less install_sdkman.sh
 bash install_sdkman.sh
@@ -42,15 +42,18 @@ Local Gradle override (optional)
 
 ```
 mkdir -p ~/.gradle
-# Edit ~/.gradle/gradle.properties and add or update the following line,
-# ensuring org.gradle.java.home is defined only once:
-# org.gradle.java.home=$(/usr/libexec/java_home -v21)
+# Edit ~/.gradle/gradle.properties and add or update org.gradle.java.home,
+# ensuring it is defined only once:
+# 1) In a shell, run: /usr/libexec/java_home -v21  (copy the absolute path it prints)
+# 2) Then set in gradle.properties, for example:
+#    org.gradle.java.home=/absolute/path/from/java_home
 ```
 
 Build (from repo root)
 
 ```
-./CARMA_android_app/gradlew clean :app:assembleDebug
+cd CARMA_android_app
+./gradlew clean :app:assembleDebug
 ```
 
 CI example (GitHub Actions)

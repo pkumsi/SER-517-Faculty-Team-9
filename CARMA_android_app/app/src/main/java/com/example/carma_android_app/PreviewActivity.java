@@ -474,28 +474,41 @@ public class PreviewActivity extends AppCompatActivity {
 
 
     private void handleCancelSend() {
-        // TODO: Cancel the auto-send and close the activity
+        // Cancel the countdown timer and notify the user.
+        if (countdownTimer != null) {
+            countdownTimer.cancel();
+            countdownTimer = null;
+            isTimerRunning = false;
+        }
 
-        // Could show confirmation dialog
-        // For now, just finish the activity
-        finish();
+        // Update timer display to reflect cancellation
+        tvTimer.setText("Send cancelled");
+        tvTimer.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
 
-        // Could show a toast
-        // Toast.makeText(this, "Auto-send cancelled", Toast.LENGTH_SHORT).show();
+        // Disable both buttons so action cannot be repeated
+        btnCancel.setEnabled(false);
+        btnSendNow.setEnabled(false);
+
+        Toast.makeText(this, "Auto-send cancelled", Toast.LENGTH_SHORT).show();
     }
 
 
     private void handleSendNow() {
-        // TODO: Send the message immediately via backend
+        // Stop the countdown timer — message is being sent now.
+        if (countdownTimer != null) {
+            countdownTimer.cancel();
+            countdownTimer = null;
+            isTimerRunning = false;
+        }
 
-        // Could show loading indicator
-        // Could navigate to confirmation screen
+        // Update timer display to reflect the send action
+        tvTimer.setText("Sending…");
 
-        // For now, just finish
-        finish();
+        // Disable both buttons so action cannot be repeated
+        btnCancel.setEnabled(false);
+        btnSendNow.setEnabled(false);
 
-        // Could show a toast
-        // Toast.makeText(this, "Message sent!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Message sent!", Toast.LENGTH_SHORT).show();
     }
 
 

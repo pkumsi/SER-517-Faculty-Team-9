@@ -71,10 +71,14 @@ type RedisConfig struct {
 
 // LoadConfig loads configuration from environment variables
 func LoadConfig() (*Config, error) {
-	// Load .env file if it exists (for local development)
-	// In production, environment variables should be set by the system
-	if err := godotenv.Load("/Users/pshar169/Documents/SER-517-Faculty-Team-9/backend/configs/.env"); err != nil {
-		log.Println("No .env file found, using system environment variables")
+	// Load .env file if it exists (for local development).
+	// Try configs/.env first (relative to working directory), then fall back
+	// to a .env in the current directory. In production, env vars are set by
+	// the system and neither file is required.
+	if err := godotenv.Load("configs/.env"); err != nil {
+		if err2 := godotenv.Load(".env"); err2 != nil {
+			log.Println("No .env file found, using system environment variables")
+		}
 	}
 
 	config := &Config{

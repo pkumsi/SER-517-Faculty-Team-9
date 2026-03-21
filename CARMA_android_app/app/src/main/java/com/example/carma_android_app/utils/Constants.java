@@ -3,7 +3,9 @@ package com.example.carma_android_app.utils;
 
 public class Constants {
     // API Configuration
-    public static final String API_BASE_URL = "http://localhost:8080";
+    // Use 10.0.2.2 when running on Android emulator to reach host machine localhost.
+    // Change to the host IP when testing on a physical device.
+    public static final String API_BASE_URL = "http://10.0.2.2:8080";
     public static final String API_VERSION = "v1";
     public static final String API_ENDPOINT_RESPONSE = "/api/v1/response";
     public static final String API_ENDPOINT_HEALTH = "/health";

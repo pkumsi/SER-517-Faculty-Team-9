@@ -10,6 +10,7 @@ import android.widget.ImageButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import android.text.InputType;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -439,16 +440,36 @@ public class PreviewActivity extends AppCompatActivity {
 
 
     private void handleEditMessage() {
-        // TODO: Open edit dialog or navigate to edit screen
-        // For now, just change the label
+        // Open a simple edit dialog allowing the user to edit the message preview.
+        String current = tvMessageContent.getText().toString();
+        EditText editText = new EditText(this);
+        editText.setText(current);
+        editText.setSelection(current.length());
+        editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        editText.setMinLines(3);
 
-        if (tvEditable.getText().toString().equals("EDITABLE")) {
-            tvEditable.setText("EDITING...");
-            tvEditable.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_dark));
-        }
-
-        // Could show a toast
-        // Toast.makeText(this, "Edit mode - coming soon", Toast.LENGTH_SHORT).show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Edit message")
+                .setView(editText)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String updated = editText.getText().toString().trim();
+                    if (!updated.isEmpty()) {
+                        // Update UI and model
+                        tvMessageContent.setText(updated);
+                        if (previewScreenData != null) {
+                            previewScreenData.setMessageContent(updated);
+                        }
+                        // Re-detect context based on edited message
+                        detectContextFromMessage();
+                        Toast.makeText(PreviewActivity.this, "Message updated", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(PreviewActivity.this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    // no-op
+                })
+                .show();
     }
 
 

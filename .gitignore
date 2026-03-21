@@ -1,6 +1,28 @@
-.DS_STORE.DS_Store
-documents/.DS_Store
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Environment files
 .env
 .env.local
 .env.*.local
-.DS_Store
+
+# Android
+*.iml
+.gradle
+/CARMA_android_app/local.properties
+/CARMA_android_app/.idea/
+/CARMA_android_app/build/
+/CARMA_android_app/app/build/
+/CARMA_android_app/captures/
+/CARMA_android_app/.externalNativeBuild
+/CARMA_android_app/.cxx
+*.apk
+*.aab
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

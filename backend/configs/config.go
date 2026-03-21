@@ -18,6 +18,7 @@ type Config struct {
 	// OpenAI   OpenAIConfig
 	LLM     LLMConfig
 	Metrics MetricsConfig
+	Redis   RedisConfig
 }
 
 // struct for server-related configuration
@@ -59,12 +60,25 @@ type MetricsConfig struct {
 	Port    string
 }
 
+// struct for Redis cache configuration
+type RedisConfig struct {
+	Enabled  bool
+	Addr     string
+	Password string
+	DB       int
+	TTL      time.Duration
+}
+
 // LoadConfig loads configuration from environment variables
 func LoadConfig() (*Config, error) {
-	// Load .env file if it exists (for local development)
-	// In production, environment variables should be set by the system
-	if err := godotenv.Load("/Users/pshar169/Documents/SER-517-Faculty-Team-9/backend/configs/.env"); err != nil {
-		log.Println("No .env file found, using system environment variables")
+	// Load .env file if it exists (for local development).
+	// Try configs/.env first (relative to working directory), then fall back
+	// to a .env in the current directory. In production, env vars are set by
+	// the system and neither file is required.
+	if err := godotenv.Load("configs/.env"); err != nil {
+		if err2 := godotenv.Load(".env"); err2 != nil {
+			log.Println("No .env file found, using system environment variables")
+		}
 	}
 
 	config := &Config{
@@ -95,6 +109,13 @@ func LoadConfig() (*Config, error) {
 		Metrics: MetricsConfig{
 			Enabled: getEnvAsBool("ENABLE_METRICS", true),
 			Port:    getEnv("METRICS_PORT", "9090"),
+		},
+		Redis: RedisConfig{
+			Enabled:  getEnvAsBool("REDIS_ENABLED", true),
+			Addr:     getEnv("REDIS_ADDR", "localhost:6379"),
+			Password: getEnv("REDIS_PASSWORD", ""),
+			DB:       getEnvAsInt("REDIS_DB", 0),
+			TTL:      getEnvAsDuration("REDIS_CACHE_TTL", 1*time.Hour),
 		},
 	}
 

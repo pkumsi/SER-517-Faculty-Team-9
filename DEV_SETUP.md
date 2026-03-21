@@ -20,7 +20,12 @@ brew install --cask temurin
 macOS install (SDKMAN)
 
 ```
-curl -s "https://get.sdkman.io" | bash
+# See official install docs: https://sdkman.io/install
+curl -s "https://get.sdkman.io" -o install_sdkman.sh
+# Optionally inspect the script before running it
+less install_sdkman.sh
+bash install_sdkman.sh
+rm install_sdkman.sh
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 sdk install java 21-temurin
 ```

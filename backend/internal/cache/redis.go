@@ -64,3 +64,28 @@ func (r *RedisCache) Set(ctx context.Context, key, value string) error {
 func (r *RedisCache) Close() error {
 	return r.client.Close()
 }
+
+// IncrementMessageCount increments the daily message count for the current day
+func (r *RedisCache) IncrementMessageCount(ctx context.Context) error {
+	today := time.Now().Format("2006-01-02")
+	key := fmt.Sprintf("stats:messages:%s", today)
+	return r.client.Incr(ctx, key).Err()
+}
+
+// GetDailyMessageCounts returns message counts for the last N days
+func (r *RedisCache) GetDailyMessageCounts(ctx context.Context, days int) (map[string]int64, error) {
+	result := make(map[string]int64)
+	
+	for i := 0; i < days; i++ {
+		date := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
+		key := fmt.Sprintf("stats:messages:%s", date)
+		
+		count, err := r.client.Get(ctx, key).Int64()
+		if err != nil && err != redis.Nil {
+			return nil, err
+		}
+		result[date] = count
+	}
+	
+	return result, nil
+}

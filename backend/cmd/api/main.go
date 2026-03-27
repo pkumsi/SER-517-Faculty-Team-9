@@ -68,6 +68,7 @@ func main() {
 	// .env → configs.LLMConfig → handler → service → llm client
 	llmHandler := handlers.NewLLMHandler(cfg, redisCache)
 	feedbackHandler := handlers.NewFeedbackHandler()
+	statisticsHandler := handlers.NewStatisticsHandler(redisCache)
 
 	// LLM response generation endpoint
 	// POST /api/v1/response
@@ -76,6 +77,7 @@ func main() {
 	{
 		v1.POST("/response", llmHandler.GenerateAutoResponse)
 		v1.POST("/feedback", feedbackHandler.SubmitFeedback)
+		v1.GET("/statistics/messages", statisticsHandler.GetMessageStatistics)
 	}
 
 	serverAddr := ":" + cfg.Server.Port
@@ -85,6 +87,8 @@ func main() {
 	log.Printf("  GET  http://localhost%s/", serverAddr)
 	log.Printf("  GET  http://localhost%s/health", serverAddr)
 	log.Printf("  POST http://localhost%s/api/v1/response", serverAddr)
+	log.Printf("  POST http://localhost%s/api/v1/feedback", serverAddr)
+	log.Printf("  GET  http://localhost%s/api/v1/statistics/messages", serverAddr)
 	log.Printf("OpenRouter API Key loaded: %v", cfg.LLM.OpenRouterAPIKey != "")
 	log.Printf("LLM Model: %s", cfg.LLM.Model)
 

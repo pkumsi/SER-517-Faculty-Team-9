@@ -51,6 +51,13 @@ func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey s
 	arEnabled := true
 	sentAR := true
 
+	// Increment message statistics if cache is available
+	if c != nil {
+		if err := c.IncrementMessageCount(context.Background()); err != nil {
+			log.Printf("Failed to increment message count: %v", err)
+		}
+	}
+
 	return &models.LLMResponseResult{
 		RequestID:             req.RequestID,
 		UUID:                  req.Context.UUID,

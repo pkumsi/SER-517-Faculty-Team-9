@@ -250,6 +250,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Loading State -->
+    <include
+        android:id="@+id/layout_loading_state"
+        layout="@layout/view_loading_state"
+        android:visibility="gone" />
+
+    <!-- Error State -->
+    <include
+        android:id="@+id/layout_error_state"
+        layout="@layout/view_error_state"
+        android:visibility="gone" />
+
     <!-- Loading Indicator -->
     <ProgressBar
         android:id="@+id/progress_loading"

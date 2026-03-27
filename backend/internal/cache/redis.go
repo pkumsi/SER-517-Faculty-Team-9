@@ -41,6 +41,14 @@ func BuildKey(activity, currentTime, senderRole, urgency, expectedResponseTime, 
 	return fmt.Sprintf("llm:response:%x", h.Sum(nil))
 }
 
+// BuildKeyFromRaw builds a cache key by hashing an arbitrary string (e.g. a
+// JSON-serialized context snapshot). Used when no inference layer is present.
+func BuildKeyFromRaw(data string) string {
+	h := sha256.New()
+	h.Write([]byte(data))
+	return fmt.Sprintf("llm:response:%x", h.Sum(nil))
+}
+
 func (r *RedisCache) Get(ctx context.Context, key string) (string, bool) {
 	val, err := r.client.Get(ctx, key).Result()
 	if err != nil {

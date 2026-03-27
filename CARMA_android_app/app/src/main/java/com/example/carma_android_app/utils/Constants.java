@@ -8,6 +8,8 @@ public class Constants {
     public static final String API_BASE_URL = "http://10.0.2.2:8080";
     public static final String API_VERSION = "v1";
     public static final String API_ENDPOINT_RESPONSE = "/api/v1/response";
+    public static final String API_ENDPOINT_FEEDBACK = "/api/v1/feedback";
+    public static final String API_ENDPOINT_STATISTICS = "/api/v1/statistics/messages";
     public static final String API_ENDPOINT_HEALTH = "/health";
     
     // Response Tones

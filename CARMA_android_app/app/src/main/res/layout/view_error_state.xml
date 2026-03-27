@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="#F5F7FA">
+
+    <!-- Error Icon -->
+    <ImageView
+        android:id="@+id/iv_error_icon"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@android:drawable/stat_notify_error"
+        android:contentDescription="Error"
+        app:tint="#F44336" />
+
+    <!-- Error Title -->
+    <TextView
+        android:id="@+id/tv_error_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Oops! Something Went Wrong"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#757575"
+        android:gravity="center"
+        android:layout_marginTop="24dp" />
+
+    <!-- Error Message -->
+    <TextView
+        android:id="@+id/tv_error_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="We couldn't load your messages. Please check your connection and try again."
+        android:textSize="14sp"
+        android:textColor="#9E9E9E"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:maxWidth="280dp" />
+
+    <!-- Retry Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_retry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Retry"
+        android:textColor="#FFFFFF"
+        app:backgroundTint="#2196F3"
+        app:icon="@android:drawable/ic_popup_sync"
+        app:iconTint="#FFFFFF"
+        android:layout_marginTop="24dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+    <!-- Go Back Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_go_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go Back"
+        android:layout_marginTop="12dp"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+</LinearLayout>

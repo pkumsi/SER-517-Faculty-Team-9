@@ -10,14 +10,14 @@ import (
 // PromptVariant represents the three template configurations from Task #25 (Prerana Kumsi)
 // grounded in combination testing results from Task #20 (Aniket Patil).
 //
-//   Minimal  → Activity + Expected Response Time (Combo 6)
-//              Good quality, best privacy-to-quality ratio.
+//	Minimal  → Activity + Expected Response Time (Combo 6)
+//	           Good quality, best privacy-to-quality ratio.
 //
-//   Standard → Activity + Time + Sender + Urgency + Expected Response Time (Combo 3)
-//              Excellent quality. Optimal 5-element set. Recommended default.
+//	Standard → Activity + Time + Sender + Urgency + Expected Response Time (Combo 3)
+//	           Excellent quality. Optimal 5-element set. Recommended default.
 //
-//   Rich     → Combo 3 with partial elements (Combo 2 fallback)
-//              Good quality when full 5-element set is not available.
+//	Rich     → Combo 3 with partial elements (Combo 2 fallback)
+//	           Good quality when full 5-element set is not available.
 type PromptVariant string
 
 const (
@@ -34,8 +34,9 @@ const (
 // Raw sensor values (noise, light, battery, device state) are used only as
 // inference inputs here and never leave this layer — per Context Selection
 // Guidelines (Task #23, Satyam Shekhar):
-//   "Noise / Light / Device / Battery — Never in prompt.
-//    Use as inputs to activity inference only. Do not pass to LLM."
+//
+//	"Noise / Light / Device / Battery — Never in prompt.
+//	 Use as inputs to activity inference only. Do not pass to LLM."
 type InferredElements struct {
 	Activity             string // Critical — Task #21, Task #22 Tier 1
 	CurrentTime          string // Critical — Task #21, Task #22 Tier 1
@@ -53,7 +54,8 @@ type InferredElements struct {
 // the appropriate prompt variant based on what was successfully inferred.
 //
 // Implements the sensor-to-prompt pipeline from Task #25 (Prerana Kumsi) Section 6:
-//   Sensor Data → Activity Inference → Context Selection → Prompt Template Assembler
+//
+//	Sensor Data → Activity Inference → Context Selection → Prompt Template Assembler
 func InferFromSnapshot(ctx *models.ContextSnapshot) *InferredElements {
 	elements := &InferredElements{}
 
@@ -73,13 +75,15 @@ func InferFromSnapshot(ctx *models.ContextSnapshot) *InferredElements {
 // system always produces a response when activity is present.
 //
 // Per Task #23 Context Selection Guidelines:
-//   "Activity — Always required. If unavailable, do not generate a response."
+//
+//	"Activity — Always required. If unavailable, do not generate a response."
 //
 // Variant mapping to Task #20 combination tests:
-//   Standard → Combo 3 (all 5 elements, Excellent)
-//   Rich     → Combo 2 (4 elements, Good) — used as fallback before Minimal
-//   Minimal  → Combo 6 (Activity + Response Time, Good)
-//              Combo 1 (Activity + Time, Acceptable)
+//
+//	Standard → Combo 3 (all 5 elements, Excellent)
+//	Rich     → Combo 2 (4 elements, Good) — used as fallback before Minimal
+//	Minimal  → Combo 6 (Activity + Response Time, Good)
+//	           Combo 1 (Activity + Time, Acceptable)
 func selectVariant(e *InferredElements) PromptVariant {
 	hasActivity := e.Activity != ""
 	hasTime := e.CurrentTime != ""
@@ -109,11 +113,11 @@ func selectVariant(e *InferredElements) PromptVariant {
 // — Task #19 T1 (Aniket Patil)
 //
 // Priority chain based on data reliability:
-//   1. Calendar_Event + Event_Name — structured, highest reliability
-//   2. PredictedAvailability — already inferred upstream by the Laila pipeline
-//   3. OnCall — direct sensor signal
-//   4. UserAct_Type — motion sensor (still, walking, in_vehicle etc.)
-//   5. BackgroundConvo — audio inference signal
+//  1. Calendar_Event + Event_Name — structured, highest reliability
+//  2. PredictedAvailability — already inferred upstream by the Laila pipeline
+//  3. OnCall — direct sensor signal
+//  4. UserAct_Type — motion sensor (still, walking, in_vehicle etc.)
+//  5. BackgroundConvo — audio inference signal
 //
 // Noise (Noise_Value), Light (Light_Value), and Device state (ScreenValue,
 // IsSilent) are used ONLY as disambiguation signals here and are never
@@ -300,10 +304,11 @@ func resolveAppName(packageName string) string {
 // "Without urgency, response timing became unclear." — Task #19 T3 (Aniket Patil)
 //
 // No explicit urgency field exists in ContextSnapshot — it is inferred from:
-//   NotifCenterValue      — number of pending notifications
-//   TimeSinceLastMessageSession — how long since last messaging activity
-//   BackgroundConvo       — active background conversation signal
-//   DoNotDisturb          — whether DND was bypassed
+//
+//	NotifCenterValue      — number of pending notifications
+//	TimeSinceLastMessageSession — how long since last messaging activity
+//	BackgroundConvo       — active background conversation signal
+//	DoNotDisturb          — whether DND was bypassed
 func inferUrgency(ctx *models.ContextSnapshot) string {
 	score := 0
 

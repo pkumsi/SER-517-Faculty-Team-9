@@ -9,11 +9,11 @@ type LLMResponseResult struct {
 	AREnabled *bool `json:"ar_enabled,omitempty"`
 	SentAR    *bool `json:"sent_ar,omitempty"`
 
-	PredictedAvailability *string  `json:"predicted_availability,omitempty"`
+	PredictedAvailability *string   `json:"predicted_availability,omitempty"`
 	Responses             *[]string `json:"responses,omitempty"`
 
 	Feedback       *ResponseFeedback `json:"feedback,omitempty"`
-	Explainability *Explainability    `json:"explainability,omitempty"`
+	Explainability *Explainability   `json:"explainability,omitempty"`
 }
 
 type ResponseFeedback struct {

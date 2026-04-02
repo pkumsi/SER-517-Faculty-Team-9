@@ -492,3 +492,213 @@ func TestInferUrgency(t *testing.T) {
 		})
 	}
 }
+
+// TestSelectVariant tests prompt variant selection based on available elements
+func TestSelectVariant(t *testing.T) {
+	tests := []struct {
+		name     string
+		elements *InferredElements
+		expected PromptVariant
+	}{
+		{
+			name: "All 5 elements present → Standard",
+			elements: &InferredElements{
+				Activity:             "in a meeting",
+				CurrentTime:          "morning (10:00)",
+				SenderRole:           "known contact via Slack",
+				Urgency:              "high",
+				ExpectedResponseTime: "1 hour",
+			},
+			expected: VariantStandard,
+		},
+		{
+			name: "4 elements (missing ResponseTime) → Rich",
+			elements: &InferredElements{
+				Activity:    "in a meeting",
+				CurrentTime: "morning (10:00)",
+				SenderRole:  "known contact via Slack",
+				Urgency:     "high",
+			},
+			expected: VariantRich,
+		},
+		{
+			name: "4 elements (missing Urgency) → Minimal",
+			elements: &InferredElements{
+				Activity:             "in a meeting",
+				CurrentTime:          "morning (10:00)",
+				SenderRole:           "known contact via Slack",
+				ExpectedResponseTime: "1 hour",
+			},
+			expected: VariantMinimal,
+		},
+		{
+			name: "Only Activity → Minimal",
+			elements: &InferredElements{
+				Activity: "in a meeting",
+			},
+			expected: VariantMinimal,
+		},
+		{
+			name: "Activity + ResponseTime (Combo 6) → Minimal",
+			elements: &InferredElements{
+				Activity:             "in a meeting",
+				ExpectedResponseTime: "1 hour",
+			},
+			expected: VariantMinimal,
+		},
+		{
+			name: "Activity + Time (Combo 1) → Minimal",
+			elements: &InferredElements{
+				Activity:    "in a meeting",
+				CurrentTime: "morning (10:00)",
+			},
+			expected: VariantMinimal,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := selectVariant(tt.elements)
+			if result != tt.expected {
+				t.Errorf("selectVariant() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestInferFromSnapshot tests the full inference pipeline
+func TestInferFromSnapshot(t *testing.T) {
+	tests := []struct {
+		name             string
+		snapshot         *models.ContextSnapshot
+		expectActivity   bool // should Activity be non-empty
+		expectVariant    PromptVariant
+		expectSenderRole bool
+		expectUrgency    string
+	}{
+		{
+			name: "Full context with calendar event and known contact",
+			snapshot: &models.ContextSnapshot{
+				CalendarEvent:               ptrInt(1),
+				EventName:                   ptrStr("Team Sync"),
+				EventTimeLeft:               ptrInt(1800000),
+				HourOfDay:                   ptrInt(14),
+				WorkingDay:                  ptrInt(1),
+				NotifApp:                    ptrStr("com.slack"),
+				Key:                         ptrStr("user123"),
+				NotifCenterValue:            ptrInt(5),
+				TimeSinceLastMessageSession: ptrInt(3700000),
+			},
+			expectActivity:   true,
+			expectVariant:    VariantStandard,
+			expectSenderRole: true,
+		},
+		{
+			name: "On-call scenario",
+			snapshot: &models.ContextSnapshot{
+				OnCall:    ptrInt(1),
+				HourOfDay: ptrInt(22),
+			},
+			expectActivity:   true,
+			expectVariant:    VariantMinimal,
+			expectSenderRole: false,
+		},
+		{
+			name:           "Empty snapshot",
+			snapshot:       &models.ContextSnapshot{},
+			expectActivity: false,
+		},
+		{
+			name: "Calendar event with minimal other context",
+			snapshot: &models.ContextSnapshot{
+				CalendarEvent: ptrInt(1),
+				EventName:     ptrStr("1:1 Meeting"),
+				EventTimeLeft: ptrInt(1200000), // 20 min
+			},
+			expectActivity:   true,
+			expectVariant:    VariantMinimal,
+			expectSenderRole: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := InferFromSnapshot(tt.snapshot)
+
+			// Verify Activity inference
+			if tt.expectActivity && result.Activity == "" {
+				t.Errorf("InferFromSnapshot: expected non-empty Activity, got empty")
+			}
+			if !tt.expectActivity && result.Activity != "" {
+				t.Errorf("InferFromSnapshot: expected empty Activity, got %q", result.Activity)
+			}
+
+			// Verify variant selection (if Activity is present)
+			if tt.expectActivity && result.Variant != tt.expectVariant {
+				t.Errorf("InferFromSnapshot: Variant = %q, want %q", result.Variant, tt.expectVariant)
+			}
+
+			// Verify SenderRole if expected
+			if tt.expectSenderRole && result.SenderRole == "" {
+				t.Errorf("InferFromSnapshot: expected non-empty SenderRole, got empty")
+			}
+			if !tt.expectSenderRole && result.SenderRole != "" {
+				t.Errorf("InferFromSnapshot: expected empty SenderRole, got %q", result.SenderRole)
+			}
+		})
+	}
+}
+
+// TestInferenceEdgeCases tests edge cases and boundary conditions
+func TestInferenceEdgeCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		snapshot *models.ContextSnapshot
+		check    func(*InferredElements) bool
+		desc     string
+	}{
+		{
+			name: "Priority: Calendar event beats predicted availability",
+			snapshot: &models.ContextSnapshot{
+				CalendarEvent:         ptrInt(1),
+				EventName:             ptrStr("Meeting"),
+				PredictedAvailability: ptrStr("0"), // Would normally mean unavailable
+			},
+			check: func(e *InferredElements) bool {
+				return e.Activity == "in a scheduled event: Meeting"
+			},
+			desc: "Calendar event should take priority",
+		},
+		{
+			name: "Priority: Predicted availability beats motion sensor",
+			snapshot: &models.ContextSnapshot{
+				PredictedAvailability: ptrStr("unavailable"),
+				UserActType:           ptrStr("walking"),
+			},
+			check: func(e *InferredElements) bool {
+				return e.Activity == "currently unavailable"
+			},
+			desc: "Predicted availability should beat motion sensor",
+		},
+		{
+			name: "Priority: On-call beats motion sensor",
+			snapshot: &models.ContextSnapshot{
+				OnCall:      ptrInt(1),
+				UserActType: ptrStr("running"),
+			},
+			check: func(e *InferredElements) bool {
+				return e.Activity == "currently on a phone call"
+			},
+			desc: "On-call should take priority over motion",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := InferFromSnapshot(tt.snapshot)
+			if !tt.check(result) {
+				t.Errorf("InferFromSnapshot edge case failed: %s", tt.desc)
+			}
+		})
+	}
+}

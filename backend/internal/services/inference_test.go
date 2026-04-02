@@ -141,3 +141,354 @@ func TestInferActivity(t *testing.T) {
 		})
 	}
 }
+
+// TestInferCurrentTime tests the inferCurrentTime function for various time scenarios
+func TestInferCurrentTime(t *testing.T) {
+	tests := []struct {
+		name     string
+		snapshot *models.ContextSnapshot
+		expected string
+	}{
+		{
+			name: "No HourOfDay, fallback to TS",
+			snapshot: &models.ContextSnapshot{
+				TS: ptrStr("2024-01-01 08:30"),
+			},
+			expected: "2024-01-01 08:30",
+		},
+		{
+			name:     "No HourOfDay and no TS",
+			snapshot: &models.ContextSnapshot{},
+			expected: "",
+		},
+		{
+			name: "Morning (hour 5 boundary)",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay: ptrInt(5),
+			},
+			expected: "morning (5:00)",
+		},
+		{
+			name: "Morning (hour 11)",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay: ptrInt(11),
+			},
+			expected: "morning (11:00)",
+		},
+		{
+			name: "Afternoon (hour 12 boundary)",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay: ptrInt(12),
+			},
+			expected: "afternoon (12:00)",
+		},
+		{
+			name: "Afternoon (hour 16)",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay: ptrInt(16),
+			},
+			expected: "afternoon (16:00)",
+		},
+		{
+			name: "Evening (hour 17 boundary)",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay: ptrInt(17),
+			},
+			expected: "evening (17:00)",
+		},
+		{
+			name: "Evening (hour 20)",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay: ptrInt(20),
+			},
+			expected: "evening (20:00)",
+		},
+		{
+			name: "Night (hour 0)",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay: ptrInt(0),
+			},
+			expected: "night (0:00)",
+		},
+		{
+			name: "Night (hour 23)",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay: ptrInt(23),
+			},
+			expected: "night (23:00)",
+		},
+		{
+			name: "Morning on non-working day",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay:  ptrInt(10),
+				WorkingDay: ptrInt(0),
+			},
+			expected: "morning (10:00) on a non-working day",
+		},
+		{
+			name: "Morning on working day",
+			snapshot: &models.ContextSnapshot{
+				HourOfDay:  ptrInt(10),
+				WorkingDay: ptrInt(1),
+			},
+			expected: "morning (10:00)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := inferCurrentTime(tt.snapshot)
+			if result != tt.expected {
+				t.Errorf("inferCurrentTime() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestInferExpectedResponseTime tests expected response time inference from event timing
+func TestInferExpectedResponseTime(t *testing.T) {
+	tests := []struct {
+		name     string
+		snapshot *models.ContextSnapshot
+		expected string
+	}{
+		{
+			name: "30 minutes remaining in event",
+			snapshot: &models.ContextSnapshot{
+				EventTimeLeft: ptrInt(1800000), // 30 minutes in milliseconds
+			},
+			expected: "approximately 30 minutes",
+		},
+		{
+			name: "Very short time remaining",
+			snapshot: &models.ContextSnapshot{
+				EventTimeLeft: ptrInt(100), // rounds to 0
+			},
+			expected: "shortly",
+		},
+		{
+			name: "Exactly 1 hour remaining",
+			snapshot: &models.ContextSnapshot{
+				EventTimeLeft: ptrInt(3600000), // 60 minutes
+			},
+			expected: "approximately 1 hour(s)",
+		},
+		{
+			name: "1 hour 30 minutes remaining",
+			snapshot: &models.ContextSnapshot{
+				EventTimeLeft: ptrInt(5400000), // 90 minutes
+			},
+			expected: "approximately 1 hour(s) and 30 minutes",
+		},
+		{
+			name: "2 hours 15 minutes remaining",
+			snapshot: &models.ContextSnapshot{
+				EventTimeLeft: ptrInt(8100000), // 135 minutes
+			},
+			expected: "approximately 2 hour(s) and 15 minutes",
+		},
+		{
+			name: "No EventTimeLeft but calendar event active",
+			snapshot: &models.ContextSnapshot{
+				CalendarEvent: ptrInt(1),
+			},
+			expected: "after the current event (~30 minutes)",
+		},
+		{
+			name:     "No EventTimeLeft and no calendar event",
+			snapshot: &models.ContextSnapshot{},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := inferExpectedResponseTime(tt.snapshot)
+			if result != tt.expected {
+				t.Errorf("inferExpectedResponseTime() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestInferSenderRole tests sender role inference from notification app and contact info
+func TestInferSenderRole(t *testing.T) {
+	tests := []struct {
+		name     string
+		snapshot *models.ContextSnapshot
+		expected string
+	}{
+		{
+			name: "Known contact via WhatsApp",
+			snapshot: &models.ContextSnapshot{
+				NotifApp: ptrStr("com.whatsapp"),
+				Key:      ptrStr("user123"),
+			},
+			expected: "known contact via WhatsApp",
+		},
+		{
+			name: "Known contact via Telegram",
+			snapshot: &models.ContextSnapshot{
+				NotifApp: ptrStr("org.telegram.messenger"),
+				Key:      ptrStr("user456"),
+			},
+			expected: "known contact via Telegram",
+		},
+		{
+			name: "Unknown contact via Slack",
+			snapshot: &models.ContextSnapshot{
+				NotifApp: ptrStr("com.slack"),
+			},
+			expected: "contact via Slack",
+		},
+		{
+			name: "Unknown app, known contact",
+			snapshot: &models.ContextSnapshot{
+				NotifApp: ptrStr("com.unknown.app"),
+				Key:      ptrStr("user123"),
+			},
+			expected: "known contact via com.unknown.app",
+		},
+		{
+			name: "No app, known contact",
+			snapshot: &models.ContextSnapshot{
+				Key: ptrStr("user123"),
+			},
+			expected: "known contact",
+		},
+		{
+			name:     "Empty app and key",
+			snapshot: &models.ContextSnapshot{},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := inferSenderRole(tt.snapshot)
+			if result != tt.expected {
+				t.Errorf("inferSenderRole() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestResolveAppName tests Android package name to app name mapping
+func TestResolveAppName(t *testing.T) {
+	tests := []struct {
+		packageName string
+		expected    string
+	}{
+		{"com.whatsapp", "WhatsApp"},
+		{"com.facebook.messenger", "Facebook Messenger"},
+		{"org.telegram.messenger", "Telegram"},
+		{"com.google.android.gm", "Gmail"},
+		{"com.microsoft.teams", "Microsoft Teams"},
+		{"com.slack", "Slack"},
+		{"com.instagram.android", "Instagram"},
+		{"com.twitter.android", "Twitter"},
+		{"com.snapchat.android", "Snapchat"},
+		{"com.linkedin.android", "LinkedIn"},
+		{"com.google.android.apps.messaging", "Google Messages"},
+		{"com.unknown.package", "com.unknown.package"}, // fallback
+		{"", ""}, // empty fallback
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.packageName, func(t *testing.T) {
+			result := resolveAppName(tt.packageName)
+			if result != tt.expected {
+				t.Errorf("resolveAppName(%q) = %q, want %q", tt.packageName, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestInferUrgency tests urgency scoring from various signals
+func TestInferUrgency(t *testing.T) {
+	tests := []struct {
+		name     string
+		snapshot *models.ContextSnapshot
+		expected string
+	}{
+		{
+			name: "All signals low/absent",
+			snapshot: &models.ContextSnapshot{
+				NotifCenterValue: ptrInt(1),
+			},
+			expected: "low",
+		},
+		{
+			name: "2-4 notifications (score=1)",
+			snapshot: &models.ContextSnapshot{
+				NotifCenterValue: ptrInt(2),
+			},
+			expected: "low",
+		},
+		{
+			name: "5+ notifications (score=2)",
+			snapshot: &models.ContextSnapshot{
+				NotifCenterValue: ptrInt(5),
+			},
+			expected: "medium",
+		},
+		{
+			name: "5+ notifications + long silence (score=3)",
+			snapshot: &models.ContextSnapshot{
+				NotifCenterValue:            ptrInt(5),
+				TimeSinceLastMessageSession: ptrInt(3700000), // > 1 hour
+			},
+			expected: "medium",
+		},
+		{
+			name: "5+ notifications + conversation (score=3)",
+			snapshot: &models.ContextSnapshot{
+				NotifCenterValue: ptrInt(5),
+				BackgroundConvo:  ptrStr("speech"),
+			},
+			expected: "medium",
+		},
+		{
+			name: "5+ notifications + long silence + conversation (score=4)",
+			snapshot: &models.ContextSnapshot{
+				NotifCenterValue:            ptrInt(5),
+				TimeSinceLastMessageSession: ptrInt(3700000),
+				BackgroundConvo:             ptrStr("speech"),
+			},
+			expected: "high",
+		},
+		{
+			name: "5+ notifications + DND=none (score=3)",
+			snapshot: &models.ContextSnapshot{
+				NotifCenterValue: ptrInt(5),
+				DoNotDisturb:     ptrStr("none"),
+			},
+			expected: "medium",
+		},
+		{
+			name: "5+ notifications + conversation + DND=none (score=4)",
+			snapshot: &models.ContextSnapshot{
+				NotifCenterValue: ptrInt(5),
+				BackgroundConvo:  ptrStr("speech"),
+				DoNotDisturb:     ptrStr("none"),
+			},
+			expected: "high",
+		},
+		{
+			name: "Background convo=noise is ignored",
+			snapshot: &models.ContextSnapshot{
+				BackgroundConvo: ptrStr("noise"),
+			},
+			expected: "low",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := inferUrgency(tt.snapshot)
+			if result != tt.expected {
+				t.Errorf("inferUrgency() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}

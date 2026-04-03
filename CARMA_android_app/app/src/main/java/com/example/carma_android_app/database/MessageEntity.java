@@ -51,6 +51,12 @@ public class MessageEntity {
     @ColumnInfo(name = "has_feedback")
     private boolean hasFeedback;
     
+    @ColumnInfo(name = "user_edited")
+    private boolean userEdited;
+    
+    @ColumnInfo(name = "original_text")
+    private String originalText;
+    
     @ColumnInfo(name = "created_at")
     private long createdAt;
     
@@ -172,13 +178,21 @@ public class MessageEntity {
         this.contextTags = contextTags;
     }
     
-    public boolean isHasFeedback() {
-        return hasFeedback;
+    public boolean isUserEdited() {
+        return userEdited;
     }
     
-    public void setHasFeedback(boolean hasFeedback) {
-        this.hasFeedback = hasFeedback;
+    public void setUserEdited(boolean userEdited) {
+        this.userEdited = userEdited;
         this.updatedAt = System.currentTimeMillis();
+    }
+    
+    public String getOriginalText() {
+        return originalText;
+    }
+    
+    public void setOriginalText(String originalText) {
+        this.originalText = originalText;
     }
     
     public long getCreatedAt() {

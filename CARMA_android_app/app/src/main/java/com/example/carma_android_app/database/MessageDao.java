@@ -174,8 +174,14 @@ public interface MessageDao {
     List<MessageEntity> searchMessages(String searchText);
     
     /**
-     * Search messages by recipient name
+     * Get messages that were edited by users
      */
-    @Query("SELECT * FROM messages WHERE recipient_name LIKE '%' || :searchText || '%' ORDER BY timestamp DESC")
-    List<MessageEntity> searchByRecipient(String searchText);
+    @Query("SELECT * FROM messages WHERE user_edited = 1 ORDER BY timestamp DESC")
+    List<MessageEntity> getUserEditedMessages();
+    
+    /**
+     * Get count of user-edited messages
+     */
+    @Query("SELECT COUNT(*) FROM messages WHERE user_edited = 1")
+    int getUserEditedMessagesCount();
 }

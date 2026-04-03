@@ -2,6 +2,10 @@
 .DS_Store
 **/.DS_Store
 
+# Windows
+Thumbs.db
+Desktop.ini
+
 # Environment files
 .env
 .env.local
@@ -9,7 +13,38 @@
 
 # Android
 *.iml
-.gradle
+*.ipr
+*.iws
+.gradle/
+.idea/
+.vscode/
+build/
+captures/
+*.apk
+*.aab
+*.class
+*.dex
+*.so
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+*.hprof
+*.jks
+*.keystore
+bin/
+gen/
+proguard/
+.cxx/
+.externalNativeBuild/
+security/
+.android/
+gradle-wrapper.properties
+local.properties
+
+# Project-specific Android paths
 /CARMA_android_app/local.properties
 /CARMA_android_app/.idea/
 /CARMA_android_app/build/
@@ -17,12 +52,15 @@
 /CARMA_android_app/captures/
 /CARMA_android_app/.externalNativeBuild
 /CARMA_android_app/.cxx
-*.apk
-*.aab
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
+# Go
+backend/api
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+coverage.out

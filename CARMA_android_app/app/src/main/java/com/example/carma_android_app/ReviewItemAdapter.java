@@ -6,16 +6,17 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.carma_android_app.models.ReviewItem;
 import java.util.List;
 
 public class ReviewItemAdapter extends RecyclerView.Adapter<ReviewItemAdapter.ViewHolder> {
-    private List<String> reviewItems;
+    private List<ReviewItem> reviewItems;
 
-    public ReviewItemAdapter(List<String> reviewItems) {
+    public ReviewItemAdapter(List<ReviewItem> reviewItems) {
         this.reviewItems = reviewItems;
     }
 
-    public void updateItems(List<String> newItems) {
+    public void updateItems(List<ReviewItem> newItems) {
         this.reviewItems = newItems;
         notifyDataSetChanged();
     }
@@ -30,8 +31,8 @@ public class ReviewItemAdapter extends RecyclerView.Adapter<ReviewItemAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String item = reviewItems.get(position);
-        holder.tvReviewText.setText(item);
+        ReviewItem item = reviewItems.get(position);
+        holder.tvReviewText.setText(item.getDisplayText());
     }
 
     @Override

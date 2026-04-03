@@ -3,6 +3,7 @@ package models
 type LLMResponseRequest struct {
 	RequestID *string          `json:"request_id,omitempty"`
 	Context   *ContextSnapshot `json:"context,omitempty"`
+	Rules     []string         `json:"rules,omitempty"`
 }
 
 type ContextSnapshot struct {

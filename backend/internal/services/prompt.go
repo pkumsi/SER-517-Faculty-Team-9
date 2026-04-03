@@ -7,27 +7,41 @@ import (
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/models"
 )
 
-// buildPrompt assembles the full LLM prompt from the raw ContextSnapshot.
-// All non-nil context fields are forwarded directly — no inference layer.
-func buildPrompt(ctx *models.ContextSnapshot) string {
-	return fmt.Sprintf("%s\n\n%s", buildSystemInstruction(), buildRawContextBlock(ctx))
+// DefaultRules are the system-level rules used when the caller supplies none.
+var DefaultRules = []string{
+	"Speak about the user in third person. Do NOT imitate the user directly.",
+	"Do NOT fabricate details. Use only the context supplied below.",
+	"Adjust tone based on sender relationship: formal for managers or colleagues, casual for friends.",
+	"Always set a realistic expectation for when the user will respond.",
+	"Keep the response concise: 1 to 3 sentences maximum.",
+	"Do not mention raw sensor data, device state, noise levels, or battery information.",
+	"Generate exactly ONE response only. Do not provide multiple options or variations.",
+	"Do not use placeholder text like [User's Name]. If no name is provided in the context, refer to the user as 'the user'. Do not invent or assume any name.",
+	"Do not add any explanation, commentary, or follow-up questions after the response.",
 }
 
-// buildSystemInstruction returns the constant system-level instruction for the LLM.
-func buildSystemInstruction() string {
-	return `You are an auto-response generation system for a mobile messaging application.
-Generate a polite, context-aware auto-response message on behalf of the user.
+// buildPrompt assembles the full LLM prompt from the raw ContextSnapshot.
+// If rules is nil or empty, DefaultRules are used.
+func buildPrompt(ctx *models.ContextSnapshot, rules []string) string {
+	return fmt.Sprintf("%s\n\n%s", buildSystemInstruction(rules), buildRawContextBlock(ctx))
+}
 
-Rules:
-- Speak about the user in third person. Do NOT imitate the user directly.
-- Do NOT fabricate details. Use only the context supplied below.
-- Adjust tone based on sender relationship: formal for managers or colleagues, casual for friends.
-- Always set a realistic expectation for when the user will respond.
-- Keep the response concise: 1 to 3 sentences maximum.
-- Do not mention raw sensor data, device state, noise levels, or battery information.
-- Generate exactly ONE response only. Do not provide multiple options or variations.
-- Do not use placeholder text like [User's Name]. Use the actual name provided in the context.
-- Do not add any explanation, commentary, or follow-up questions after the response.`
+// buildSystemInstruction returns the system-level instruction block.
+// If rules is nil or empty, DefaultRules are used.
+func buildSystemInstruction(rules []string) string {
+	if len(rules) == 0 {
+		rules = DefaultRules
+	}
+	var sb strings.Builder
+	sb.WriteString("You are an auto-response generation system for a mobile messaging application.\n")
+	sb.WriteString("Generate a polite, context-aware auto-response message on behalf of the user.\n\n")
+	sb.WriteString("Rules:\n")
+	for _, r := range rules {
+		sb.WriteString("- ")
+		sb.WriteString(r)
+		sb.WriteString("\n")
+	}
+	return strings.TrimRight(sb.String(), "\n")
 }
 
 // buildRawContextBlock formats all meaningful non-nil fields from a ContextSnapshot

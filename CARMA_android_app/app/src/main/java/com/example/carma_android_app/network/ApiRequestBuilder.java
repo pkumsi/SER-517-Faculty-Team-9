@@ -1,5 +1,6 @@
 package com.example.carma_android_app.network;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,22 +15,34 @@ import org.json.JSONObject;
 public class ApiRequestBuilder {
 
     /**
-     * Wraps a context snapshot in the top-level LLMResponseRequest envelope.
+     * Wraps a context snapshot in the top-level LLMResponseRequest envelope,
+     * including the user-configured rules array.
      *
-     * @param requestId  caller-generated request ID
-     * @param contextData  already-built ContextSnapshot JSON object
+     * @param requestId   caller-generated request ID
+     * @param contextData already-built ContextSnapshot JSON object
+     * @param rules       JSONArray of rule strings to send; pass null to omit (backend uses defaults)
      * @return JSON string ready to POST to /api/v1/response
      */
-    public static String buildAutoResponseRequest(String requestId, JSONObject contextData) {
+    public static String buildAutoResponseRequest(String requestId, JSONObject contextData, JSONArray rules) {
         try {
             JSONObject request = new JSONObject();
             request.put("request_id", requestId);
             request.put("context", contextData);
+            if (rules != null && rules.length() > 0) {
+                request.put("rules", rules);
+            }
             return request.toString();
         } catch (JSONException e) {
             e.printStackTrace();
             return "{}";
         }
+    }
+
+    /**
+     * Convenience overload — omits rules so the backend uses its defaults.
+     */
+    public static String buildAutoResponseRequest(String requestId, JSONObject contextData) {
+        return buildAutoResponseRequest(requestId, contextData, null);
     }
 
     /**

@@ -26,7 +26,7 @@ func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey s
 			log.Printf("Cache hit for key %s", cacheKey)
 			response = cached
 		} else {
-			prompt := buildPrompt(req.Context)
+			prompt := buildPrompt(req.Context, req.Rules)
 			var err error
 			response, err = callLLM(prompt, model, apiKey)
 			if err != nil {
@@ -38,7 +38,7 @@ func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey s
 			}
 		}
 	} else {
-		prompt := buildPrompt(req.Context)
+		prompt := buildPrompt(req.Context, req.Rules)
 		var err error
 		response, err = callLLM(prompt, model, apiKey)
 		if err != nil {

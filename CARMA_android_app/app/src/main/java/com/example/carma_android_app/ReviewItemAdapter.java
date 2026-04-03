@@ -9,10 +9,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class ReviewItemAdapter extends RecyclerView.Adapter<ReviewItemAdapter.ViewHolder> {
-    private List<String> reviewItems; // Replace String with your ReviewItem model if needed
+    private List<String> reviewItems;
 
     public ReviewItemAdapter(List<String> reviewItems) {
         this.reviewItems = reviewItems;
+    }
+
+    public void updateItems(List<String> newItems) {
+        this.reviewItems = newItems;
+        notifyDataSetChanged();
     }
 
     @NonNull

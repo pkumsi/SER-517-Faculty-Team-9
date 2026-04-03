@@ -39,7 +39,7 @@ public class ApiClient {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
             connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            connection.setReadTimeout(60000);
 
             // Send request
             try (OutputStream os = connection.getOutputStream()) {
@@ -75,7 +75,7 @@ public class ApiClient {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
             connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            connection.setReadTimeout(60000);
             try (OutputStream os = connection.getOutputStream()) {
                 byte[] input = requestBody.getBytes("utf-8");
                 os.write(input, 0, input.length);

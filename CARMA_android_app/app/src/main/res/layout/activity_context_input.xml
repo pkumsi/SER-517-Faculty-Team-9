@@ -4,701 +4,179 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:background="#F0F2F8"
+    android:fitsSystemWindows="true">
 
     <!-- Top App Bar -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:elevation="4dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="Set Your Context"
+            app:title="CARMA"
             app:titleTextColor="@color/white"
             android:background="?attr/colorPrimary" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Scrollable content -->
+    <!-- Main content -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:padding="16dp"
-        android:clipToPadding="false">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="28dp"
+            android:paddingBottom="32dp">
 
-            <!-- Subtitle -->
+            <!-- Header section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Auto-Response Generator"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="6dp" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tap to select what applies to you right now. Time is filled automatically."
+                android:text="Load a sample context from the dataset, then generate an auto-response based on it."
                 android:textSize="13sp"
-                android:textColor="#666666"
-                android:layout_marginBottom="16dp" />
+                android:textColor="#6B7280"
+                android:lineSpacingMultiplier="1.4"
+                android:layout_marginBottom="28dp" />
 
-            <!-- ── GROUP: What are you doing? ── -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- Load Sample button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_load_sample"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🏃 What are you doing?"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_activity"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="false">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_activity_still"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Still / Sitting" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_activity_walking"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Walking" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_activity_vehicle"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="In Vehicle" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_activity_bicycle"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="On Bicycle" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_activity_unknown"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Not Sure" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── GROUP: Where are you? ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📍 Where are you?"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_location"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="false">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_loc_home"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Home" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_loc_passing"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Out / Passing" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_loc_none"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="No Location" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── GROUP: Phone / Screen state ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📱 Phone screen state"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_screen"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="false">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_screen_unlocked"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Unlocked" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_screen_on"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="On" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_screen_locked"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Locked" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_screen_off"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Off" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── GROUP: Calendar Event ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📅 Calendar event right now?"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <!-- Has event / No event toggle -->
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_calendar_toggle"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="false"
-                        android:layout_marginBottom="8dp">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_calendar_yes"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Yes, I have an event" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_calendar_no"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="No event" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                    <!-- Event type sub-chips (shown only when "Yes" is selected) -->
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_event_type"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        app:singleSelection="true"
-                        app:selectionRequired="false">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_event_meeting"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Meeting" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_event_coffee"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Coffee chat" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_event_class"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Class / Lecture" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_event_happyhour"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Happy hour" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_event_other"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Other" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── GROUP: Who messaged you? ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="💬 Message came from"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_notif_app"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="false">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_notif_whatsapp"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="WhatsApp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_notif_slack"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Slack" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_notif_gmail"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Gmail" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_notif_messenger"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Messenger" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_notif_skype"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Skype" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_notif_sms"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="SMS" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── GROUP: Audio ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🎵 Audio (select all that apply)"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_audio"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="false">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_audio_music"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🎵 Music playing" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_audio_headphones"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🎧 Headphones on" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── GROUP: Ringer ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔔 Ringer mode"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_ringer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="false">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_ringer_normal"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Normal" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_ringer_vibrate"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Vibrate" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_ringer_silent"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Silent" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── GROUP: Background ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔊 Background noise"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_background"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="false">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_bg_quiet"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Quiet" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_bg_voice"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Background voices" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── GROUP: Weather ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🌤 Weather outside"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_weather"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="false">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_weather_clear"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="☀️ Clear" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_weather_cloudy"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="☁️ Cloudy" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_weather_rain"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🌧️ Rain" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_weather_thunder"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⛈️ Thunderstorm" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_weather_mist"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🌫️ Mist" />
-
-                    </com.google.android.material.chip.ChipGroup>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── GROUP: On a call? ── -->
+                android:layout_height="52dp"
+                android:text="Load Sample Context"
+                android:textSize="14sp"
+                android:textAllCaps="false"
+                android:layout_marginBottom="16dp"
+                app:cornerRadius="12dp"
+                app:strokeWidth="2dp" />
+
+            <!-- Context snapshot card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
+                app:cardElevation="3dp"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="?attr/colorPrimary"
+                app:strokeWidth="1dp"
+                app:cardBackgroundColor="@android:color/white">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📞 Phone call status"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#212121"
-                        android:layout_marginBottom="10dp" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chip_group_call"
+                    <!-- Card header bar -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:singleSelection="true"
-                        app:selectionRequired="false">
+                        android:orientation="horizontal"
+                        android:background="#EDE7F6"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:gravity="center_vertical">
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_call_no"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Context Snapshot"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="#4527A0"
+                            android:letterSpacing="0.05" />
+
+                        <TextView
+                            android:id="@+id/tv_sample_badge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Not on a call" />
+                            android:text="—"
+                            android:textSize="12sp"
+                            android:textColor="#7C4DFF"
+                            android:background="@drawable/badge_background"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingTop="2dp"
+                            android:paddingBottom="2dp" />
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_call_yes"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
+                    </LinearLayout>
+
+                    <!-- Divider -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#E8EAF6" />
+
+                    <!-- Scrollable content -->
+                    <androidx.core.widget.NestedScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/tv_context_preview"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="On a call" />
+                            android:text="No context loaded yet.\nTap 'Load Sample Context' to pick a random data row."
+                            android:textSize="13sp"
+                            android:textColor="#424242"
+                            android:lineSpacingMultiplier="1.6"
+                            android:fontFamily="monospace"
+                            android:padding="16dp" />
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_call_ringing"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Ringing" />
-
-                    </com.google.android.material.chip.ChipGroup>
+                    </androidx.core.widget.NestedScrollView>
 
                 </LinearLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Generate Response Button -->
+            <!-- Generate Response button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_generate_response"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:text="Generate Response"
-                android:textSize="16sp"
-                android:textColor="@color/white"
-                app:backgroundTint="?attr/colorPrimary"
-                app:cornerRadius="12dp"
-                android:layout_marginBottom="32dp" />
+                android:textSize="15sp"
+                android:textAllCaps="false"
+                android:layout_marginBottom="12dp"
+                app:cornerRadius="12dp" />
+
+            <!-- Settings text button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_settings"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="⚙  Rule Settings"
+                android:textSize="13sp"
+                android:textAllCaps="false"
+                android:textColor="#7C4DFF" />
 
         </LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

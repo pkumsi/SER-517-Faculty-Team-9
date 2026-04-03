@@ -97,13 +97,13 @@ public class MessageRepository {
     }
 
     /**
-     * Mark message as having feedback
+     * Get a message by ID
      */
-    public void markMessageAsFeedbackGiven(long messageId, SimpleCallback callback) {
+    public void getMessageById(long messageId, Callback<MessageEntity> callback) {
         executor.execute(() -> {
             try {
-                messageDao.markAsFeedbackGiven(messageId, System.currentTimeMillis());
-                mainHandler.post(callback::onSuccess);
+                MessageEntity message = messageDao.getMessageById(messageId);
+                mainHandler.post(() -> callback.onSuccess(message));
             } catch (Exception e) {
                 mainHandler.post(() -> callback.onError(e));
             }
@@ -364,6 +364,34 @@ public class MessageRepository {
             try {
                 List<MessageEntity> messages = messageDao.searchByRecipient(searchText);
                 mainHandler.post(() -> callback.onSuccess(messages));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(e));
+            }
+        });
+    }
+
+    /**
+     * Get messages that were edited by users
+     */
+    public void getUserEditedMessages(Callback<List<MessageEntity>> callback) {
+        executor.execute(() -> {
+            try {
+                List<MessageEntity> messages = messageDao.getUserEditedMessages();
+                mainHandler.post(() -> callback.onSuccess(messages));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(e));
+            }
+        });
+    }
+    
+    /**
+     * Get count of user-edited messages
+     */
+    public void getUserEditedMessagesCount(Callback<Integer> callback) {
+        executor.execute(() -> {
+            try {
+                int count = messageDao.getUserEditedMessagesCount();
+                mainHandler.post(() -> callback.onSuccess(count));
             } catch (Exception e) {
                 mainHandler.post(() -> callback.onError(e));
             }

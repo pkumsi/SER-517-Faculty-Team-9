@@ -15,8 +15,8 @@ import android.text.InputType;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import com.example.carma_android_app.network.ApiClient;
-import com.example.carma_android_app.models.PreviewScreenData;
+import com.example.carma_android_app.database.MessageRepository;
+import com.example.carma_android_app.database.MessageEntity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -64,8 +64,9 @@ public class PreviewActivity extends AppCompatActivity {
     private MaterialButton btnCancel;
     private MaterialButton btnSendNow;
 
-    // Bottom navigation
-    private BottomNavigationView bottomNavigation;
+    // Database
+    private MessageRepository messageRepository;
+    private long currentMessageId = -1; // Track the current message being edited
 
     // State variables
     private boolean isContextExpanded = true;
@@ -84,6 +85,9 @@ public class PreviewActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_preview);
+
+        // Initialize database
+        messageRepository = new MessageRepository(this);
 
         // Initialize all views
         initializeViews();
@@ -524,6 +528,10 @@ public class PreviewActivity extends AppCompatActivity {
                         }
                         // Re-detect context based on edited message
                         detectContextFromMessage();
+
+                        // Update message in database if it exists
+                        updateMessageInDatabase(updated);
+
                         Toast.makeText(PreviewActivity.this, "Message updated", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(PreviewActivity.this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
@@ -552,6 +560,9 @@ public class PreviewActivity extends AppCompatActivity {
         btnCancel.setEnabled(false);
         btnSendNow.setEnabled(false);
 
+        // Save cancelled message to database
+        saveMessageToDatabase("cancelled");
+
         Toast.makeText(this, "Auto-send cancelled", Toast.LENGTH_SHORT).show();
     }
 
@@ -570,6 +581,9 @@ public class PreviewActivity extends AppCompatActivity {
         // Disable both buttons so action cannot be repeated
         btnCancel.setEnabled(false);
         btnSendNow.setEnabled(false);
+
+        // Save message to database
+        saveMessageToDatabase("sent");
 
         Toast.makeText(this, "Message sent!", Toast.LENGTH_SHORT).show();
     }
@@ -604,7 +618,84 @@ public class PreviewActivity extends AppCompatActivity {
         // Resume countdown timer if needed
         resumeCountdownTimer();
     }
+    /**
+     * Save message to database when sent or cancelled
+     */
+    private void saveMessageToDatabase(String status) {
+        if (previewScreenData == null) {
+            return;
+        }
 
+        MessageEntity message = new MessageEntity();
+        message.setRequestId(requestId);
+        message.setRecipientName("Recipient"); // TODO: Get actual recipient name
+        message.setMessageText(previewScreenData.getMessageContent());
+        message.setTimestamp(System.currentTimeMillis());
+        message.setTone("Auto"); // TODO: Determine tone from context
+        message.setStatus(status);
+        message.setContextActivity(chipActivity.getText().toString().replace("Activity: ", ""));
+        message.setContextSender(chipSender.getText().toString().replace("Sender: ", ""));
+        message.setContextUrgency(chipUrgency.getText().toString().replace("Urgency: ", ""));
+
+        messageRepository.insertMessage(message, new MessageRepository.Callback<Long>() {
+            @Override
+            public void onSuccess(Long messageId) {
+                currentMessageId = messageId;
+                // Message saved successfully
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Handle error - could log or show user feedback
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * Update message in database when edited
+     */
+    private void updateMessageInDatabase(String updatedText) {
+        if (currentMessageId == -1) {
+            // Message not yet saved to database, save it now
+            saveMessageToDatabase("pending");
+            return;
+        }
+
+        // Get current message and update it
+        messageRepository.getMessageById(currentMessageId, new MessageRepository.Callback<MessageEntity>() {
+            @Override
+            public void onSuccess(MessageEntity message) {
+                if (message != null) {
+                    // If this is the first edit, store the original text
+                    if (!message.isUserEdited()) {
+                        message.setOriginalText(message.getMessageText());
+                    }
+                    
+                    message.setMessageText(updatedText);
+                    message.setUserEdited(true);
+                    message.setUpdatedAt(System.currentTimeMillis());
+
+                    messageRepository.updateMessage(message, new MessageRepository.SimpleCallback() {
+                        @Override
+                        public void onSuccess() {
+                            // Message updated successfully
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

@@ -2,7 +2,9 @@ package com.example.carma_android_app.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import com.example.carma_android_app.utils.Constants;
 
@@ -85,5 +87,46 @@ public class PreferencesManager {
     // Clear all preferences
     public void clearAll() {
         preferences.edit().clear().apply();
+    }
+
+    // ── Rules management ──────────────────────────────────────────────────────
+
+    /** Persists the set of rule indices (0-based) that the user has disabled. */
+    public void setDisabledRuleIndices(Set<Integer> disabledIndices) {
+        Set<String> asStrings = new HashSet<>();
+        for (int i : disabledIndices) asStrings.add(String.valueOf(i));
+        preferences.edit().putStringSet(Constants.KEY_DISABLED_RULES, asStrings).apply();
+    }
+
+    /** Returns the set of rule indices (0-based) that the user has disabled. */
+    public Set<Integer> getDisabledRuleIndices() {
+        Set<String> raw = preferences.getStringSet(Constants.KEY_DISABLED_RULES, new HashSet<>());
+        Set<Integer> result = new HashSet<>();
+        for (String s : raw) result.add(Integer.parseInt(s));
+        return result;
+    }
+
+    /** Persists user-added custom rules. */
+    public void setCustomRules(Set<String> customRules) {
+        preferences.edit().putStringSet(Constants.KEY_CUSTOM_RULES, customRules).apply();
+    }
+
+    /** Returns user-added custom rules. */
+    public Set<String> getCustomRules() {
+        return preferences.getStringSet(Constants.KEY_CUSTOM_RULES, new HashSet<>());
+    }
+
+    /**
+     * Returns the effective rule list to send to the backend:
+     * enabled default rules (those not in disabledRuleIndices) + all custom rules.
+     */
+    public List<String> getEffectiveRules() {
+        Set<Integer> disabled = getDisabledRuleIndices();
+        List<String> result = new ArrayList<>();
+        for (int i = 0; i < Constants.DEFAULT_RULES.length; i++) {
+            if (!disabled.contains(i)) result.add(Constants.DEFAULT_RULES[i]);
+        }
+        result.addAll(getCustomRules());
+        return result;
     }
 }

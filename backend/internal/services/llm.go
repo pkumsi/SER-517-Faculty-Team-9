@@ -29,7 +29,7 @@ func callLLM(prompt string, model string, apiKey string) (string, error) {
 	config := openai.DefaultConfig(apiKey)
 	config.BaseURL = "https://openrouter.ai/api/v1"
 	config.HTTPClient = &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: 90 * time.Second,
 	}
 
 	client := openai.NewClientWithConfig(config)

@@ -42,6 +42,12 @@
             android:exported="false"
             android:label="Home" />
 
+        <!-- SettingsActivity - configurable auto-response rules -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:label="Settings" />
+
     </application>
 
 </manifest>

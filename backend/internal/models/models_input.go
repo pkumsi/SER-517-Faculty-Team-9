@@ -3,6 +3,7 @@ package models
 type LLMResponseRequest struct {
 	RequestID *string          `json:"request_id,omitempty"`
 	Context   *ContextSnapshot `json:"context,omitempty"`
+	Rules     []string         `json:"rules,omitempty"`
 }
 
 type ContextSnapshot struct {
@@ -18,11 +19,11 @@ type ContextSnapshot struct {
 	HourOfDay  *int64 `json:"HourOfDay,omitempty"`
 	WorkingDay *int64 `json:"WorkingDay,omitempty"`
 
-	AppValue        *string  `json:"App_Value,omitempty"`
-	AudioMusic      *int64   `json:"Audio_Music,omitempty"`
-	AudioHeadphones *int64   `json:"Audio_Headphones,omitempty"`
-	BattValue       *int64   `json:"Batt_Value,omitempty"`
-	BattDrainValue  *int64   `json:"BattDrain_Value,omitempty"`
+	AppValue        *string `json:"App_Value,omitempty"`
+	AudioMusic      *int64  `json:"Audio_Music,omitempty"`
+	AudioHeadphones *int64  `json:"Audio_Headphones,omitempty"`
+	BattValue       *int64  `json:"Batt_Value,omitempty"`
+	BattDrainValue  *int64  `json:"BattDrain_Value,omitempty"`
 
 	CellTowerData    *int64  `json:"CellTower_Data,omitempty"`
 	CellTowerRoaming *int64  `json:"CellTower_Roaming,omitempty"`

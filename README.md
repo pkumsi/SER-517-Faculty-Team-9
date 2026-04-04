@@ -104,6 +104,8 @@ The server starts on `http://localhost:8080` by default.
 | `GET` | `/` | Health check |
 | `GET` | `/health` | Health check |
 | `POST` | `/api/v1/response` | Generate an auto-response |
+| `POST` | `/api/v1/feedback` | Submit feedback for responses |
+| `GET` | `/api/v1/statistics/messages` | Get daily message statistics |
 
 ### POST `/api/v1/response`
 
@@ -133,6 +135,23 @@ The server starts on `http://localhost:8080` by default.
   "responses": [
     "The user is currently in a team standup and will be available in approximately 15 minutes."
   ]
+}
+```
+
+### GET `/api/v1/statistics/messages`
+
+**Query Parameters:**
+- `days` (optional): Number of days to retrieve statistics for (default: 7, max: 365)
+
+**Response:**
+```json
+{
+  "statistics": {
+    "2024-01-15": 25,
+    "2024-01-14": 32,
+    "2024-01-13": 18
+  },
+  "days": 7
 }
 ```
 

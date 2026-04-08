@@ -17,6 +17,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import com.example.carma_android_app.database.MessageRepository;
 import com.example.carma_android_app.database.MessageEntity;
+import com.example.carma_android_app.models.PreviewScreenData;
+import com.example.carma_android_app.network.ApiClient;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -63,6 +65,9 @@ public class PreviewActivity extends AppCompatActivity {
     // Action buttons
     private MaterialButton btnCancel;
     private MaterialButton btnSendNow;
+
+    // Bottom navigation
+    private BottomNavigationView bottomNavigation;
 
     // Database
     private MessageRepository messageRepository;
@@ -560,10 +565,8 @@ public class PreviewActivity extends AppCompatActivity {
         btnCancel.setEnabled(false);
         btnSendNow.setEnabled(false);
 
-        // Save cancelled message to database
+        // Save cancelled message to database (Toast comes from save callback)
         saveMessageToDatabase("cancelled");
-
-        Toast.makeText(this, "Auto-send cancelled", Toast.LENGTH_SHORT).show();
     }
 
 
@@ -582,27 +585,18 @@ public class PreviewActivity extends AppCompatActivity {
         btnCancel.setEnabled(false);
         btnSendNow.setEnabled(false);
 
-        // Save message to database
+        // Save message to database (Toast comes from save callback)
         saveMessageToDatabase("sent");
-
-        Toast.makeText(this, "Message sent!", Toast.LENGTH_SHORT).show();
     }
 
 
     private void navigateToReview() {
-        // TODO: Implement navigation to ReviewActivity
-        // Intent intent = new Intent(this, ReviewActivity.class);
-        // startActivity(intent);
-
-        // Toast.makeText(this, "Review screen - coming soon", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(this, ReviewActivity.class));
     }
 
+    /** Contacts screen is not implemented; open rule settings instead. */
     private void navigateToContacts() {
-        // TODO: Implement navigation to ContactsActivity
-        // Intent intent = new Intent(this, ContactsActivity.class);
-        // startActivity(intent);
-
-        // Toast.makeText(this, "Contacts screen - coming soon", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(this, SettingsActivity.class));
     }
 
     @Override
@@ -626,10 +620,14 @@ public class PreviewActivity extends AppCompatActivity {
             return;
         }
 
+        // Always persist what the user actually sees in the preview (may differ from model if UI drifted).
+        String body = tvMessageContent.getText().toString().trim();
+        previewScreenData.setMessageContent(body);
+
         MessageEntity message = new MessageEntity();
         message.setRequestId(requestId);
-        message.setRecipientName("Recipient"); // TODO: Get actual recipient name
-        message.setMessageText(previewScreenData.getMessageContent());
+        message.setRecipientName(tvRecipientName.getText().toString().trim());
+        message.setMessageText(body);
         message.setTimestamp(System.currentTimeMillis());
         message.setTone("Auto"); // TODO: Determine tone from context
         message.setStatus(status);
@@ -641,13 +639,17 @@ public class PreviewActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Long messageId) {
                 currentMessageId = messageId;
-                // Message saved successfully
+                Toast.makeText(PreviewActivity.this,
+                        "Saved (" + status + ") to device database",
+                        Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onError(Exception e) {
-                // Handle error - could log or show user feedback
-                e.printStackTrace();
+                android.util.Log.e("PreviewActivity", "Room insert failed", e);
+                Toast.makeText(PreviewActivity.this,
+                        "Could not save to database: " + e.getMessage(),
+                        Toast.LENGTH_LONG).show();
             }
         });
     }

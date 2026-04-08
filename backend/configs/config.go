@@ -19,7 +19,6 @@ type Config struct {
 	// OpenAI   OpenAIConfig
 	LLM     LLMConfig
 	Metrics MetricsConfig
-	Redis   RedisConfig
 }
 
 // struct for server-related configuration
@@ -35,7 +34,7 @@ type LoggingConfig struct {
 	Format string // "json" or "text"
 }
 
-// struct API-related configuration
+// struct for API-related configuration
 type APIConfig struct {
 	Version string
 	Timeout time.Duration
@@ -53,15 +52,6 @@ type LLMConfig struct {
 type MetricsConfig struct {
 	Enabled bool
 	Port    string
-}
-
-// struct for Redis cache configuration
-type RedisConfig struct {
-	Enabled  bool
-	Addr     string
-	Password string
-	DB       int
-	TTL      time.Duration
 }
 
 // LoadConfig loads configuration from environment variables
@@ -99,13 +89,6 @@ func LoadConfig() (*Config, error) {
 		Metrics: MetricsConfig{
 			Enabled: getEnvAsBool("ENABLE_METRICS", true),
 			Port:    getEnv("METRICS_PORT", "9090"),
-		},
-		Redis: RedisConfig{
-			Enabled:  getEnvAsBool("REDIS_ENABLED", true),
-			Addr:     getEnv("REDIS_ADDR", "localhost:6379"),
-			Password: getEnv("REDIS_PASSWORD", ""),
-			DB:       getEnvAsInt("REDIS_DB", 0),
-			TTL:      getEnvAsDuration("REDIS_CACHE_TTL", 1*time.Hour),
 		},
 	}
 

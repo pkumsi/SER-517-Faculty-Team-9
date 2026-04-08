@@ -13,17 +13,17 @@ import (
 )
 
 func main() {
-	logFile, err := logger.Init("api.log")
-	if err != nil {
-		log.Fatalf("Failed to open log file: %v", err)
-	}
-	defer logFile.Close()
-
-	// Load configuration
+	// Load configuration before logger so we can mirror logs to stderr in development.
 	cfg, err := configs.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
+
+	logFile, err := logger.Init("api.log", cfg.IsDevelopment())
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	defer logFile.Close()
 
 	// Debug info
 	log.Println("Starting API Server")
@@ -89,8 +89,9 @@ func main() {
 	log.Printf("  POST http://localhost%s/api/v1/response", serverAddr)
 	log.Printf("  POST http://localhost%s/api/v1/feedback", serverAddr)
 	log.Printf("  GET  http://localhost%s/api/v1/statistics/messages", serverAddr)
-	log.Printf("OpenRouter API Key loaded: %v", cfg.LLM.OpenRouterAPIKey != "")
-	log.Printf("LLM Model: %s", cfg.LLM.Model)
+	log.Printf("Groq API key loaded: %v", cfg.LLM.APIKey != "")
+	log.Printf("LLM base URL: %s", cfg.LLM.BaseURL)
+	log.Printf("LLM model: %s", cfg.LLM.Model)
 
 	// Start Gin server
 	if err := r.Run(serverAddr); err != nil {

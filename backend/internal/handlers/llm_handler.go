@@ -5,18 +5,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/configs"
-	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/cache"
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/models"
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/services"
 )
 
 type LLMHandler struct {
-	cfg   *configs.Config
-	cache *cache.RedisCache
+	cfg *configs.Config
 }
 
-func NewLLMHandler(cfg *configs.Config, c *cache.RedisCache) *LLMHandler {
-	return &LLMHandler{cfg: cfg, cache: c}
+func NewLLMHandler(cfg *configs.Config) *LLMHandler {
+	return &LLMHandler{cfg: cfg}
 }
 
 func (h *LLMHandler) GenerateAutoResponse(c *gin.Context) {
@@ -36,7 +34,7 @@ func (h *LLMHandler) GenerateAutoResponse(c *gin.Context) {
 		return
 	}
 
-	result, err := services.GenerateAutoResponse(&req, h.cfg.LLM.Model, h.cfg.LLM.OpenRouterAPIKey, h.cache)
+	result, err := services.GenerateAutoResponse(&req, h.cfg.LLM.Model, h.cfg.LLM.OpenRouterAPIKey)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

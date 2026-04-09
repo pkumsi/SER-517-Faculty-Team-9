@@ -36,6 +36,12 @@
             android:exported="false"
             android:label="CARMA Preview" />
 
+        <!-- ReviewActivity - saved messages from local Room database -->
+        <activity
+            android:name=".ReviewActivity"
+            android:exported="false"
+            android:label="Review" />
+
         <!-- MainActivity - Available but not launcher -->
         <activity
             android:name=".MainActivity"

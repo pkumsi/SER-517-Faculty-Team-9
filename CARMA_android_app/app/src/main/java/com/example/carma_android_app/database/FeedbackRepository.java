@@ -75,6 +75,26 @@ public class FeedbackRepository {
         insertFeedback(feedback, callback);
     }
 
+    /**
+     * Replace any existing feedback for this message, then insert the new row.
+     * Use when the user changes their mind or submits feedback again from Review.
+     */
+    public void saveOrReplaceFeedback(long messageId, boolean positive, String comment, Callback<Long> callback) {
+        executor.execute(() -> {
+            try {
+                feedbackDao.deleteByMessageId(messageId);
+                String type = positive ? FeedbackEntity.THUMBS_UP : FeedbackEntity.THUMBS_DOWN;
+                String c = (comment != null && !comment.trim().isEmpty()) ? comment.trim() : null;
+                FeedbackEntity feedback = new FeedbackEntity(messageId, type, c);
+                long id = feedbackDao.insert(feedback);
+                messageDao.markAsFeedbackGiven(messageId, System.currentTimeMillis());
+                mainHandler.post(() -> callback.onSuccess(id));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(e));
+            }
+        });
+    }
+
     // ============ UPDATE OPERATIONS ============
 
     /**

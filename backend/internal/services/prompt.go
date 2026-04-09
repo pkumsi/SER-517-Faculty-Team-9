@@ -12,12 +12,13 @@ var DefaultRules = []string{
 	"Speak about the user in third person. Do NOT imitate the user directly.",
 	"Do NOT fabricate details. Use only the context supplied below.",
 	"Adjust tone based on sender relationship: formal for managers or colleagues, casual for friends.",
-	"Always set a realistic expectation for when the user will respond.",
+	"Do NOT suggest or imply when the user will respond or become available. Never use phrases like 'will be available', 'will respond', 'once done', 'shortly after', 'when free', or anything similar. The response must ONLY explain why they are unavailable right now.",
+	"Do NOT include specific locations, addresses, or full event titles in the response. Keep event references general (e.g. 'a meeting', 'an event').",
 	"Keep the response concise: 1 to 3 sentences maximum.",
 	"Do not mention raw sensor data, device state, noise levels, or battery information.",
 	"Generate exactly ONE response only. Do not provide multiple options or variations.",
 	"Do not use placeholder text like [User's Name]. If no name is provided in the context, refer to the user as 'the user'. Do not invent or assume any name.",
-	"Do not add any explanation, commentary, or follow-up questions after the response.",
+	"The 'response' field must contain only the auto-response message — no extra commentary, questions, or follow-up text.",
 }
 
 // buildPrompt assembles the full LLM prompt from the raw ContextSnapshot.
@@ -34,7 +35,9 @@ func buildSystemInstruction(rules []string) string {
 	}
 	var sb strings.Builder
 	sb.WriteString("You are an auto-response generation system for a mobile messaging application.\n")
-	sb.WriteString("Generate a polite, context-aware auto-response message on behalf of the user.\n\n")
+	sb.WriteString("Use ALL provided context to understand why the user is unavailable, but the 'response' field must be a generic, privacy-safe message — do NOT reveal specific event names, locations, time remaining, or any identifiable details from the context. The 'explanation' field may reference specific context elements for internal use.\n\n")
+	sb.WriteString("You MUST respond with ONLY a valid JSON object in this exact format, with no text before or after:\n")
+	sb.WriteString("{\n  \"response\": \"<polite generic message explaining unavailability — no specific details>\",\n  \"explanation\": \"<one sentence referencing the specific context elements that drove this response>\"\n}\n\n")
 	sb.WriteString("Rules:\n")
 	for _, r := range rules {
 		sb.WriteString("- ")
@@ -163,9 +166,9 @@ func buildRawContextBlock(ctx *models.ContextSnapshot) string {
 	}
 
 	if len(lines) == 0 {
-		return "Context: No context data available.\n\nGenerate a polite auto-response."
+		return "Context: No context data available.\n\nExplain politely that the user is currently unavailable."
 	}
-	return "Context:\n" + strings.Join(lines, "\n") + "\n\nGenerate a polite auto-response."
+	return "Context:\n" + strings.Join(lines, "\n") + "\n\nBased on the context above, generate a polite message explaining why the user is currently unavailable."
 }
 
 // hourLabel converts a 0-23 hour to a time-of-day label.

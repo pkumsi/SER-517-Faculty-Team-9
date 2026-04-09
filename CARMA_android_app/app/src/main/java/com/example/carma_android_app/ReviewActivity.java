@@ -1,5 +1,6 @@
 package com.example.carma_android_app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,23 +45,24 @@ public class ReviewActivity extends AppCompatActivity {
         adapter = new ReviewItemAdapter(new ArrayList<>());
         recyclerView.setAdapter(adapter);
 
-        // Initialize bottom navigation if present in layout
         bottomNavigation = findViewById(R.id.bottom_navigation);
         if (bottomNavigation != null) {
             bottomNavigation.setOnItemSelectedListener(item -> {
                 int itemId = item.getItemId();
                 if (itemId == R.id.nav_preview) {
-                    // TODO: Navigate to PreviewActivity
+                    finish();
                     return true;
-                } else if (itemId == R.id.nav_review) {
-                    // Already on review screen
+                }
+                if (itemId == R.id.nav_review) {
                     return true;
-                } else if (itemId == R.id.nav_contacts) {
-                    // TODO: Navigate to ContactsActivity
+                }
+                if (itemId == R.id.nav_contacts) {
+                    startActivity(new Intent(this, SettingsActivity.class));
                     return true;
                 }
                 return false;
             });
+            bottomNavigation.setSelectedItemId(R.id.nav_review);
         }
 
         // Load statistics

@@ -178,6 +178,14 @@ public class MessageEntity {
         this.contextTags = contextTags;
     }
     
+    public boolean isHasFeedback() {
+        return hasFeedback;
+    }
+    
+    public void setHasFeedback(boolean hasFeedback) {
+        this.hasFeedback = hasFeedback;
+    }
+    
     public boolean isUserEdited() {
         return userEdited;
     }

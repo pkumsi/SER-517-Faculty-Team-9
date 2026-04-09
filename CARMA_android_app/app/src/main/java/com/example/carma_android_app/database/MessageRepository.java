@@ -96,20 +96,6 @@ public class MessageRepository {
         });
     }
 
-    /**
-     * Get a message by ID
-     */
-    public void getMessageById(long messageId, Callback<MessageEntity> callback) {
-        executor.execute(() -> {
-            try {
-                MessageEntity message = messageDao.getMessageById(messageId);
-                mainHandler.post(() -> callback.onSuccess(message));
-            } catch (Exception e) {
-                mainHandler.post(() -> callback.onError(e));
-            }
-        });
-    }
-
     // ============ DELETE OPERATIONS ============
 
     /**
@@ -185,7 +171,7 @@ public class MessageRepository {
     }
 
     /**
-     * Get message by ID
+     * Get a message by ID
      */
     public void getMessageById(long messageId, Callback<MessageEntity> callback) {
         executor.execute(() -> {

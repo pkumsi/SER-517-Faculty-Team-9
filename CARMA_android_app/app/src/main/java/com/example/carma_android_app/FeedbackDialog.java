@@ -6,17 +6,20 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.example.carma_android_app.R;
 
 public class FeedbackDialog extends Dialog {
-    private EditText etFeedbackTag;
-    private Button btnSubmit, btnCancel;
+    private TextView tvRecipientName, tvTimestamp, tvStatus, tvMessageContent;
+    private ImageButton btnClose;
+    private View cardThumbsUp, cardThumbsDown;
     private OnFeedbackSubmitListener listener;
 
     public interface OnFeedbackSubmitListener {
-        void onFeedbackSubmit(String tag);
+        void onFeedbackSubmit(boolean isPositive);
     }
 
     public FeedbackDialog(@NonNull Context context, @Nullable OnFeedbackSubmitListener listener) {
@@ -28,26 +31,47 @@ public class FeedbackDialog extends Dialog {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.dialog_feedback);
-        etFeedbackTag = findViewById(R.id.et_feedback_tag);
-        btnSubmit = findViewById(R.id.btn_feedback_submit);
-        btnCancel = findViewById(R.id.btn_feedback_cancel);
+        
+        tvRecipientName = findViewById(R.id.tv_recipient_name);
+        tvTimestamp = findViewById(R.id.tv_timestamp);
+        tvStatus = findViewById(R.id.tv_status);
+        tvMessageContent = findViewById(R.id.tv_message_content);
+        btnClose = findViewById(R.id.btn_close);
+        cardThumbsUp = findViewById(R.id.card_thumbs_up);
+        cardThumbsDown = findViewById(R.id.card_thumbs_down);
 
-        btnSubmit.setOnClickListener(new View.OnClickListener() {
+        cardThumbsUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String tag = etFeedbackTag.getText().toString().trim();
                 if (listener != null) {
-                    listener.onFeedbackSubmit(tag);
+                    listener.onFeedbackSubmit(true);
                 }
                 dismiss();
             }
         });
 
-        btnCancel.setOnClickListener(new View.OnClickListener() {
+        cardThumbsDown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.onFeedbackSubmit(false);
+                }
+                dismiss();
+            }
+        });
+
+        btnClose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dismiss();
             }
         });
+    }
+
+    public void setData(String recipient, String time, String status, String content) {
+        if (tvRecipientName != null) tvRecipientName.setText(recipient);
+        if (tvTimestamp != null) tvTimestamp.setText(time);
+        if (tvStatus != null) tvStatus.setText(status);
+        if (tvMessageContent != null) tvMessageContent.setText(content);
     }
 }

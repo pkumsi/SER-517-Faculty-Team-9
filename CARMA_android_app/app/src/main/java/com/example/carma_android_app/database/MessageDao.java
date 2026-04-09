@@ -172,6 +172,12 @@ public interface MessageDao {
      */
     @Query("SELECT * FROM messages WHERE message_text LIKE '%' || :searchText || '%' ORDER BY timestamp DESC")
     List<MessageEntity> searchMessages(String searchText);
+
+    /**
+     * Search messages by recipient name
+     */
+    @Query("SELECT * FROM messages WHERE recipient_name LIKE '%' || :searchText || '%' ORDER BY timestamp DESC")
+    List<MessageEntity> searchByRecipient(String searchText);
     
     /**
      * Get messages that were edited by users

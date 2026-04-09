@@ -104,29 +104,21 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
         holder.tvStatusLabel.setText(statusLabel);
         holder.tvStatusLabel.setTextColor(barColor);
 
-        int extraTagCount = countAdditionalTags(m.getContextTags());
-        if (extraTagCount > 0) {
+        List<String> extraTags = parseAdditionalTags(m.getContextTags());
+        int extraTagCount = extraTags.size();
+        if (extraTagCount == 1) {
             holder.tvMoreTags.setVisibility(View.VISIBLE);
-            holder.tvMoreTags.setText("+" + extraTagCount + " more");
+            holder.tvMoreTags.setText(extraTags.get(0));
+        } else if (extraTagCount > 1) {
+            holder.tvMoreTags.setVisibility(View.VISIBLE);
+            holder.tvMoreTags.setText(extraTags.get(0) + " (+" + (extraTagCount - 1) + ")");
         } else {
             holder.tvMoreTags.setVisibility(View.GONE);
         }
 
-        String fb = feedbackTypeByMessageId.get(m.getId());
-        if (FeedbackEntity.THUMBS_UP.equals(fb)) {
-            holder.ivFeedback.setVisibility(View.VISIBLE);
-            holder.ivFeedback.setImageResource(R.drawable.ic_thumbs_up);
-            holder.ivFeedback.setColorFilter(Color.parseColor("#4CAF50"));
-            holder.tvNoFeedback.setVisibility(View.GONE);
-        } else if (FeedbackEntity.THUMBS_DOWN.equals(fb)) {
-            holder.ivFeedback.setVisibility(View.VISIBLE);
-            holder.ivFeedback.setImageResource(R.drawable.ic_thumbs_down);
-            holder.ivFeedback.setColorFilter(Color.parseColor("#F44336"));
-            holder.tvNoFeedback.setVisibility(View.GONE);
-        } else {
-            holder.ivFeedback.setVisibility(View.GONE);
-            holder.tvNoFeedback.setVisibility(View.VISIBLE);
-        }
+        // Keep feedback in DB and dialog flow, but do not display like/dislike on the card list UI.
+        holder.ivFeedback.setVisibility(View.GONE);
+        holder.tvNoFeedback.setVisibility(View.GONE);
 
         holder.itemView.setOnClickListener(v -> {
             if (messageClickListener != null) {
@@ -139,17 +131,24 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
         return s != null ? s.trim() : "";
     }
 
-    private static int countAdditionalTags(String contextTagsJson) {
+    private static List<String> parseAdditionalTags(String contextTagsJson) {
+        List<String> result = new ArrayList<>();
         String raw = safe(contextTagsJson);
         if (raw.isEmpty()) {
-            return 0;
+            return result;
         }
         try {
             JSONArray tags = new JSONArray(raw);
-            return tags.length();
+            for (int i = 0; i < tags.length(); i++) {
+                String tag = tags.optString(i, "").trim();
+                if (!tag.isEmpty()) {
+                    result.add(tag);
+                }
+            }
         } catch (JSONException ignored) {
-            return 0;
+            // ignore malformed historical data
         }
+        return result;
     }
 
     @Override
@@ -165,7 +164,7 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
         final TextView tvPreview;
         final Chip chip1;
         final Chip chip2;
-        final TextView tvMoreTags;
+        final Chip tvMoreTags;
         final ImageView ivFeedback;
         final TextView tvNoFeedback;
 

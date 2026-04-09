@@ -127,16 +127,19 @@
                     android:visibility="gone"
                     style="@style/Widget.MaterialComponents.Chip.Entry" />
 
-                <TextView
+                <com.google.android.material.chip.Chip
                     android:id="@+id/tv_more_tags"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="+2 more"
                     android:textSize="10sp"
-                    android:textColor="#757575"
+                    android:textColor="#1976D2"
+                    app:chipBackgroundColor="#E3F2FD"
+                    app:chipMinHeight="24dp"
                     android:layout_marginStart="4dp"
-                    android:gravity="center_vertical"
-                    android:visibility="gone" />
+                    android:clickable="false"
+                    android:visibility="gone"
+                    style="@style/Widget.MaterialComponents.Chip.Entry" />
 
             </LinearLayout>
 

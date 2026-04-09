@@ -93,31 +93,4 @@ public class ApiClient {
             connection.disconnect();
         }
     }
-
-    /**
-     * Get message statistics from backend
-     * @param days Number of days to retrieve statistics for
-     * @return API response as String
-     */
-    public String getMessageStatistics(int days) throws IOException {
-        URL url = new URL(Constants.API_BASE_URL + Constants.API_ENDPOINT_STATISTICS + "?days=" + days);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        try {
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000);
-            connection.setReadTimeout(30000);
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                try (Scanner scanner = new Scanner(connection.getInputStream())) {
-                    scanner.useDelimiter("\\A");
-                    return scanner.hasNext() ? scanner.next() : "";
-                }
-            } else {
-                throw new IOException("HTTP error code: " + responseCode);
-            }
-        } finally {
-            connection.disconnect();
-        }
-    }
 }

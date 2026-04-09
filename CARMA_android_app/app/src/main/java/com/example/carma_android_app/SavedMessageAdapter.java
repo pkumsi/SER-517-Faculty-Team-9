@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.carma_android_app.database.FeedbackEntity;
 import com.example.carma_android_app.database.MessageEntity;
 import com.google.android.material.chip.Chip;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -87,30 +89,36 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
 
         String status = m.getStatus() != null ? m.getStatus() : "pending";
         int barColor;
+        String statusLabel;
         if ("sent".equalsIgnoreCase(status)) {
             barColor = Color.parseColor("#4CAF50");
+            statusLabel = "Sent";
         } else if ("cancelled".equalsIgnoreCase(status)) {
             barColor = Color.parseColor("#F44336");
+            statusLabel = "Cancelled";
         } else {
             barColor = Color.parseColor("#BDBDBD");
+            statusLabel = "Pending";
         }
         holder.statusBar.setBackgroundColor(barColor);
+        holder.tvStatusLabel.setText(statusLabel);
+        holder.tvStatusLabel.setTextColor(barColor);
 
-        String fb = feedbackTypeByMessageId.get(m.getId());
-        if (FeedbackEntity.THUMBS_UP.equals(fb)) {
-            holder.ivFeedback.setVisibility(View.VISIBLE);
-            holder.ivFeedback.setImageResource(R.drawable.ic_thumbs_up);
-            holder.ivFeedback.setColorFilter(Color.parseColor("#4CAF50"));
-            holder.tvNoFeedback.setVisibility(View.GONE);
-        } else if (FeedbackEntity.THUMBS_DOWN.equals(fb)) {
-            holder.ivFeedback.setVisibility(View.VISIBLE);
-            holder.ivFeedback.setImageResource(R.drawable.ic_thumbs_down);
-            holder.ivFeedback.setColorFilter(Color.parseColor("#F44336"));
-            holder.tvNoFeedback.setVisibility(View.GONE);
+        List<String> extraTags = parseAdditionalTags(m.getContextTags());
+        int extraTagCount = extraTags.size();
+        if (extraTagCount == 1) {
+            holder.tvMoreTags.setVisibility(View.VISIBLE);
+            holder.tvMoreTags.setText(extraTags.get(0));
+        } else if (extraTagCount > 1) {
+            holder.tvMoreTags.setVisibility(View.VISIBLE);
+            holder.tvMoreTags.setText(extraTags.get(0) + " (+" + (extraTagCount - 1) + ")");
         } else {
-            holder.ivFeedback.setVisibility(View.GONE);
-            holder.tvNoFeedback.setVisibility(View.VISIBLE);
+            holder.tvMoreTags.setVisibility(View.GONE);
         }
+
+        // Keep feedback in DB and dialog flow, but do not display like/dislike on the card list UI.
+        holder.ivFeedback.setVisibility(View.GONE);
+        holder.tvNoFeedback.setVisibility(View.GONE);
 
         holder.itemView.setOnClickListener(v -> {
             if (messageClickListener != null) {
@@ -123,6 +131,26 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
         return s != null ? s.trim() : "";
     }
 
+    private static List<String> parseAdditionalTags(String contextTagsJson) {
+        List<String> result = new ArrayList<>();
+        String raw = safe(contextTagsJson);
+        if (raw.isEmpty()) {
+            return result;
+        }
+        try {
+            JSONArray tags = new JSONArray(raw);
+            for (int i = 0; i < tags.length(); i++) {
+                String tag = tags.optString(i, "").trim();
+                if (!tag.isEmpty()) {
+                    result.add(tag);
+                }
+            }
+        } catch (JSONException ignored) {
+            // ignore malformed historical data
+        }
+        return result;
+    }
+
     @Override
     public int getItemCount() {
         return messages.size();
@@ -132,10 +160,11 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
         final View statusBar;
         final TextView tvRecipient;
         final TextView tvTimestamp;
+        final TextView tvStatusLabel;
         final TextView tvPreview;
         final Chip chip1;
         final Chip chip2;
-        final TextView tvMoreTags;
+        final Chip tvMoreTags;
         final ImageView ivFeedback;
         final TextView tvNoFeedback;
 
@@ -144,6 +173,7 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
             statusBar = itemView.findViewById(R.id.view_status_indicator);
             tvRecipient = itemView.findViewById(R.id.tv_recipient_name);
             tvTimestamp = itemView.findViewById(R.id.tv_timestamp);
+            tvStatusLabel = itemView.findViewById(R.id.tv_status_label);
             tvPreview = itemView.findViewById(R.id.tv_message_preview);
             chip1 = itemView.findViewById(R.id.chip_context_1);
             chip2 = itemView.findViewById(R.id.chip_context_2);

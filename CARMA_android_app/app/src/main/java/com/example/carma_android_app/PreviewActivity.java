@@ -75,6 +75,8 @@ public class PreviewActivity extends AppCompatActivity {
     private com.example.carma_android_app.database.FeedbackRepository feedbackRepository;
     private long currentMessageId = -1; // Track the current message being edited
     private Boolean pendingThumbFeedback = null; // true = thumbs up, false = thumbs down
+    private boolean hasLocalEdits = false;
+    private String initialMessageText = "";
 
     // State variables
     private boolean isContextExpanded = true;
@@ -238,6 +240,9 @@ public class PreviewActivity extends AppCompatActivity {
         // Bind to UI
         tvRecipientName.setText(previewScreenData.getRecipientName());
         tvMessageContent.setText(previewScreenData.getMessageContent());
+        initialMessageText = previewScreenData.getMessageContent() != null
+                ? previewScreenData.getMessageContent()
+                : "";
         tvTimer.setText(previewScreenData.getTimerText());
         bindContextChips(
             previewScreenData.getContextTags().get(0),
@@ -542,6 +547,7 @@ public class PreviewActivity extends AppCompatActivity {
                         if (previewScreenData != null) {
                             previewScreenData.setMessageContent(updated);
                         }
+                        hasLocalEdits = true;
                         // Re-detect context based on edited message
                         detectContextFromMessage();
 
@@ -695,8 +701,7 @@ public class PreviewActivity extends AppCompatActivity {
      */
     private void updateMessageInDatabase(String updatedText) {
         if (currentMessageId == -1) {
-            // Message not yet saved to database, save it now
-            saveMessageToDatabase("pending");
+            // Message not saved yet; keep edits in memory and persist once user sends/cancels.
             return;
         }
 
@@ -757,6 +762,13 @@ public class PreviewActivity extends AppCompatActivity {
         message.setContextSender(sender);
         message.setContextUrgency(urgency);
         message.setContextTags(buildAdditionalContextTagsJson());
+        if (hasLocalEdits) {
+            message.setUserEdited(true);
+            String existingOriginal = message.getOriginalText();
+            if (existingOriginal == null || existingOriginal.trim().isEmpty()) {
+                message.setOriginalText(initialMessageText);
+            }
+        }
     }
 
     private String buildAdditionalContextTagsJson() {

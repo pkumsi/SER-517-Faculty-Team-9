@@ -54,29 +54,6 @@ public class ReviewActivity extends AppCompatActivity {
         adapter = new SavedMessageAdapter();
         recyclerView.setAdapter(adapter);
 
-        adapter.setOnMessageClickListener(message -> {
-            FeedbackDialog dialog = new FeedbackDialog(this, message,
-                    (messageId, isPositive, comment) ->
-                            feedbackRepository.saveOrReplaceFeedback(messageId, isPositive, comment,
-                                    new FeedbackRepository.Callback<Long>() {
-                                        @Override
-                                        public void onSuccess(Long id) {
-                                            Toast.makeText(ReviewActivity.this,
-                                                    "Feedback saved",
-                                                    Toast.LENGTH_SHORT).show();
-                                            loadSavedMessages();
-                                        }
-
-                                        @Override
-                                        public void onError(Exception e) {
-                                            Toast.makeText(ReviewActivity.this,
-                                                    "Could not save feedback: " + e.getMessage(),
-                                                    Toast.LENGTH_LONG).show();
-                                        }
-                                    }));
-            dialog.show();
-        });
-
         bottomNavigation = findViewById(R.id.bottom_navigation);
         if (bottomNavigation != null) {
             bottomNavigation.setOnItemSelectedListener(item -> {
@@ -114,13 +91,19 @@ public class ReviewActivity extends AppCompatActivity {
                 List<FeedbackEntity> feedbackList = db.feedbackDao().getAllFeedback();
 
                 Map<Long, String> feedbackByMessage = new HashMap<>();
-                int positive = 0;
-                int negative = 0;
+                Map<Long, FeedbackEntity> feedbackEntityByMessage = new HashMap<>();
                 for (FeedbackEntity f : feedbackList) {
                     feedbackByMessage.put(f.getMessageId(), f.getFeedbackType());
-                    if (FeedbackEntity.THUMBS_UP.equals(f.getFeedbackType())) {
+                    feedbackEntityByMessage.put(f.getMessageId(), f);
+                }
+
+                int positive = 0;
+                int negative = 0;
+                for (MessageEntity m : messages) {
+                    String feedbackType = feedbackByMessage.get(m.getId());
+                    if (FeedbackEntity.THUMBS_UP.equals(feedbackType)) {
                         positive++;
-                    } else if (FeedbackEntity.THUMBS_DOWN.equals(f.getFeedbackType())) {
+                    } else if (FeedbackEntity.THUMBS_DOWN.equals(feedbackType)) {
                         negative++;
                     }
                 }
@@ -128,11 +111,38 @@ public class ReviewActivity extends AppCompatActivity {
                 final int total = messages.size();
                 final List<MessageEntity> messagesFinal = messages;
                 final Map<Long, String> fbFinal = feedbackByMessage;
+                final Map<Long, FeedbackEntity> feedbackEntityByMessageFinal = feedbackEntityByMessage;
                 final int posFinal = positive;
                 final int negFinal = negative;
 
                 runOnUiThread(() -> {
                     adapter.setData(messagesFinal, fbFinal);
+                    adapter.setOnMessageClickListener(message -> {
+                        FeedbackDialog dialog = new FeedbackDialog(
+                                this,
+                                message,
+                                feedbackEntityByMessageFinal.get(message.getId()),
+                                (messageId, isPositive, comment) ->
+                                        feedbackRepository.saveOrReplaceFeedback(messageId, isPositive, comment,
+                                                new FeedbackRepository.Callback<Long>() {
+                                                    @Override
+                                                    public void onSuccess(Long id) {
+                                                        Toast.makeText(ReviewActivity.this,
+                                                                "Feedback saved",
+                                                                Toast.LENGTH_SHORT).show();
+                                                        loadSavedMessages();
+                                                    }
+
+                                                    @Override
+                                                    public void onError(Exception e) {
+                                                        Toast.makeText(ReviewActivity.this,
+                                                                "Could not save feedback: " + e.getMessage(),
+                                                                Toast.LENGTH_LONG).show();
+                                                    }
+                                                })
+                        );
+                        dialog.show();
+                    });
                     tvTotalMessages.setText(String.valueOf(total));
                     tvPositiveCount.setText(String.valueOf(posFinal));
                     tvNegativeCount.setText(String.valueOf(negFinal));

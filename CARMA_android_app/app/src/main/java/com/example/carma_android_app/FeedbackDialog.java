@@ -5,13 +5,16 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.carma_android_app.database.FeedbackEntity;
 import com.example.carma_android_app.database.MessageEntity;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.textfield.TextInputEditText;
@@ -30,6 +33,7 @@ public class FeedbackDialog extends Dialog {
     }
 
     private final MessageEntity message;
+    private final FeedbackEntity existingFeedback;
     private final OnFeedbackSubmitListener listener;
 
     private TextView tvRecipientName;
@@ -37,8 +41,10 @@ public class FeedbackDialog extends Dialog {
     private TextView tvStatus;
     private TextView tvMessageContent;
     private ImageButton btnClose;
-    private View cardThumbsUp;
-    private View cardThumbsDown;
+    private MaterialCardView cardThumbsUp;
+    private MaterialCardView cardThumbsDown;
+    private ImageView ivThumbsUp;
+    private ImageView ivThumbsDown;
     private Chip chipActivity;
     private Chip chipSender;
     private Chip chipUrgency;
@@ -51,9 +57,11 @@ public class FeedbackDialog extends Dialog {
     private boolean pendingPositive = true;
 
     public FeedbackDialog(@NonNull Context context, @NonNull MessageEntity message,
+                          @Nullable FeedbackEntity existingFeedback,
                           @Nullable OnFeedbackSubmitListener listener) {
         super(context);
         this.message = message;
+        this.existingFeedback = existingFeedback;
         this.listener = listener;
     }
 
@@ -76,8 +84,10 @@ public class FeedbackDialog extends Dialog {
         tvStatus = findViewById(R.id.tv_status);
         tvMessageContent = findViewById(R.id.tv_message_content);
         btnClose = findViewById(R.id.btn_close);
-        cardThumbsUp = findViewById(R.id.card_thumbs_up);
-        cardThumbsDown = findViewById(R.id.card_thumbs_down);
+        cardThumbsUp = (MaterialCardView) findViewById(R.id.card_thumbs_up);
+        cardThumbsDown = (MaterialCardView) findViewById(R.id.card_thumbs_down);
+        ivThumbsUp = findViewById(R.id.iv_thumbs_up);
+        ivThumbsDown = findViewById(R.id.iv_thumbs_down);
         chipActivity = findViewById(R.id.chip_activity);
         chipSender = findViewById(R.id.chip_sender);
         chipUrgency = findViewById(R.id.chip_urgency);
@@ -94,17 +104,8 @@ public class FeedbackDialog extends Dialog {
 
         btnClose.setOnClickListener(v -> dismiss());
 
-        cardThumbsUp.setOnClickListener(v -> {
-            pendingPositive = true;
-            layoutComments.setVisibility(View.VISIBLE);
-            layoutActionButtons.setVisibility(View.VISIBLE);
-        });
-
-        cardThumbsDown.setOnClickListener(v -> {
-            pendingPositive = false;
-            layoutComments.setVisibility(View.VISIBLE);
-            layoutActionButtons.setVisibility(View.VISIBLE);
-        });
+        cardThumbsUp.setOnClickListener(v -> setFeedbackSelection(true, true));
+        cardThumbsDown.setOnClickListener(v -> setFeedbackSelection(false, true));
 
         btnCancel.setOnClickListener(v -> {
             layoutComments.setVisibility(View.GONE);
@@ -115,6 +116,8 @@ public class FeedbackDialog extends Dialog {
         });
 
         btnSubmit.setOnClickListener(v -> submit());
+
+        prefillExistingFeedbackIfAny();
     }
 
     private void bindMessage(MessageEntity m) {
@@ -165,6 +168,39 @@ public class FeedbackDialog extends Dialog {
 
     private static String safe(String s) {
         return s != null ? s.trim() : "";
+    }
+
+    private void prefillExistingFeedbackIfAny() {
+        if (existingFeedback == null || existingFeedback.getFeedbackType() == null) {
+            setFeedbackSelection(true, false);
+            return;
+        }
+        boolean isPositive = FeedbackEntity.THUMBS_UP.equals(existingFeedback.getFeedbackType());
+        setFeedbackSelection(isPositive, true);
+        String existingComment = existingFeedback.getComment();
+        if (etComments != null && existingComment != null) {
+            etComments.setText(existingComment);
+        }
+    }
+
+    private void setFeedbackSelection(boolean isPositive, boolean showEditor) {
+        pendingPositive = isPositive;
+
+        int selectedStroke = 0xFF2196F3;
+        int defaultStroke = 0xFFE0E0E0;
+        if (cardThumbsUp != null && cardThumbsDown != null) {
+            cardThumbsUp.setStrokeColor(isPositive ? selectedStroke : defaultStroke);
+            cardThumbsDown.setStrokeColor(isPositive ? defaultStroke : selectedStroke);
+        }
+        if (ivThumbsUp != null && ivThumbsDown != null) {
+            ivThumbsUp.setColorFilter(isPositive ? 0xFF4CAF50 : 0xFF757575);
+            ivThumbsDown.setColorFilter(isPositive ? 0xFF757575 : 0xFFF44336);
+        }
+
+        if (showEditor) {
+            layoutComments.setVisibility(View.VISIBLE);
+            layoutActionButtons.setVisibility(View.VISIBLE);
+        }
     }
 
     private void submit() {

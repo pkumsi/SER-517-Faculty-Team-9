@@ -54,29 +54,6 @@ public class ReviewActivity extends AppCompatActivity {
         adapter = new SavedMessageAdapter();
         recyclerView.setAdapter(adapter);
 
-        adapter.setOnMessageClickListener(message -> {
-            FeedbackDialog dialog = new FeedbackDialog(this, message,
-                    (messageId, isPositive, comment) ->
-                            feedbackRepository.saveOrReplaceFeedback(messageId, isPositive, comment,
-                                    new FeedbackRepository.Callback<Long>() {
-                                        @Override
-                                        public void onSuccess(Long id) {
-                                            Toast.makeText(ReviewActivity.this,
-                                                    "Feedback saved",
-                                                    Toast.LENGTH_SHORT).show();
-                                            loadSavedMessages();
-                                        }
-
-                                        @Override
-                                        public void onError(Exception e) {
-                                            Toast.makeText(ReviewActivity.this,
-                                                    "Could not save feedback: " + e.getMessage(),
-                                                    Toast.LENGTH_LONG).show();
-                                        }
-                                    }));
-            dialog.show();
-        });
-
         bottomNavigation = findViewById(R.id.bottom_navigation);
         if (bottomNavigation != null) {
             bottomNavigation.setOnItemSelectedListener(item -> {
@@ -128,11 +105,41 @@ public class ReviewActivity extends AppCompatActivity {
                 final int total = messages.size();
                 final List<MessageEntity> messagesFinal = messages;
                 final Map<Long, String> fbFinal = feedbackByMessage;
+                final Map<Long, FeedbackEntity> feedbackEntityByMessageFinal = new HashMap<>();
                 final int posFinal = positive;
                 final int negFinal = negative;
+                for (FeedbackEntity f : feedbackList) {
+                    feedbackEntityByMessageFinal.put(f.getMessageId(), f);
+                }
 
                 runOnUiThread(() -> {
                     adapter.setData(messagesFinal, fbFinal);
+                    adapter.setOnMessageClickListener(message -> {
+                        FeedbackDialog dialog = new FeedbackDialog(
+                                this,
+                                message,
+                                feedbackEntityByMessageFinal.get(message.getId()),
+                                (messageId, isPositive, comment) ->
+                                        feedbackRepository.saveOrReplaceFeedback(messageId, isPositive, comment,
+                                                new FeedbackRepository.Callback<Long>() {
+                                                    @Override
+                                                    public void onSuccess(Long id) {
+                                                        Toast.makeText(ReviewActivity.this,
+                                                                "Feedback saved",
+                                                                Toast.LENGTH_SHORT).show();
+                                                        loadSavedMessages();
+                                                    }
+
+                                                    @Override
+                                                    public void onError(Exception e) {
+                                                        Toast.makeText(ReviewActivity.this,
+                                                                "Could not save feedback: " + e.getMessage(),
+                                                                Toast.LENGTH_LONG).show();
+                                                    }
+                                                })
+                        );
+                        dialog.show();
+                    });
                     tvTotalMessages.setText(String.valueOf(total));
                     tvPositiveCount.setText(String.valueOf(posFinal));
                     tvNegativeCount.setText(String.valueOf(negFinal));

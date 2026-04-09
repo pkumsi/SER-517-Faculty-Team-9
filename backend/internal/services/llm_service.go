@@ -2,12 +2,16 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/models"
 )
 
-func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey string) (*models.LLMResponseResult, error) {
+// GenerateAutoResponse builds a prompt and calls the LLM. If exposeLLMErrors is true
+// (development), LLM failures return a wrapped error so the handler can surface
+// provider messages (e.g. 401 Invalid API Key) for debugging.
+func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey string, baseURL string, exposeLLMErrors bool) (*models.LLMResponseResult, error) {
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
@@ -16,10 +20,10 @@ func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey s
 	}
 
 	prompt := buildPrompt(req.Context, req.Rules)
-	response, err := callLLM(prompt, model, apiKey)
+	response, err := callLLM(prompt, model, apiKey, baseURL)
 	if err != nil {
 		log.Printf("LLM call failed: %v", err)
-		return nil, errors.New("auto-response generation failed. The AI service is currently unavailable or took too long to respond. Please try again in a few seconds")
+		return nil, llmFailureReturn(err, exposeLLMErrors)
 	}
 
 	arEnabled := true
@@ -35,4 +39,11 @@ func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey s
 		PredictedAvailability: req.Context.PredictedAvailability,
 		Responses:             &[]string{response},
 	}, nil
+}
+
+func llmFailureReturn(cause error, expose bool) error {
+	if expose {
+		return fmt.Errorf("LLM provider error: %v", cause)
+	}
+	return errors.New("auto-response generation failed. The AI service is currently unavailable or took too long to respond. Please try again in a few seconds")
 }

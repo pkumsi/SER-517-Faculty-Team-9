@@ -91,13 +91,19 @@ public class ReviewActivity extends AppCompatActivity {
                 List<FeedbackEntity> feedbackList = db.feedbackDao().getAllFeedback();
 
                 Map<Long, String> feedbackByMessage = new HashMap<>();
-                int positive = 0;
-                int negative = 0;
+                Map<Long, FeedbackEntity> feedbackEntityByMessage = new HashMap<>();
                 for (FeedbackEntity f : feedbackList) {
                     feedbackByMessage.put(f.getMessageId(), f.getFeedbackType());
-                    if (FeedbackEntity.THUMBS_UP.equals(f.getFeedbackType())) {
+                    feedbackEntityByMessage.put(f.getMessageId(), f);
+                }
+
+                int positive = 0;
+                int negative = 0;
+                for (MessageEntity m : messages) {
+                    String feedbackType = feedbackByMessage.get(m.getId());
+                    if (FeedbackEntity.THUMBS_UP.equals(feedbackType)) {
                         positive++;
-                    } else if (FeedbackEntity.THUMBS_DOWN.equals(f.getFeedbackType())) {
+                    } else if (FeedbackEntity.THUMBS_DOWN.equals(feedbackType)) {
                         negative++;
                     }
                 }
@@ -105,12 +111,9 @@ public class ReviewActivity extends AppCompatActivity {
                 final int total = messages.size();
                 final List<MessageEntity> messagesFinal = messages;
                 final Map<Long, String> fbFinal = feedbackByMessage;
-                final Map<Long, FeedbackEntity> feedbackEntityByMessageFinal = new HashMap<>();
+                final Map<Long, FeedbackEntity> feedbackEntityByMessageFinal = feedbackEntityByMessage;
                 final int posFinal = positive;
                 final int negFinal = negative;
-                for (FeedbackEntity f : feedbackList) {
-                    feedbackEntityByMessageFinal.put(f.getMessageId(), f);
-                }
 
                 runOnUiThread(() -> {
                     adapter.setData(messagesFinal, fbFinal);

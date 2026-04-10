@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.carma_android_app.database.FeedbackEntity;
 import com.example.carma_android_app.database.MessageEntity;
 import com.google.android.material.chip.Chip;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -87,14 +89,28 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
 
         String status = m.getStatus() != null ? m.getStatus() : "pending";
         int barColor;
+        String statusLabel;
         if ("sent".equalsIgnoreCase(status)) {
             barColor = Color.parseColor("#4CAF50");
+            statusLabel = "Sent";
         } else if ("cancelled".equalsIgnoreCase(status)) {
             barColor = Color.parseColor("#F44336");
+            statusLabel = "Cancelled";
         } else {
             barColor = Color.parseColor("#BDBDBD");
+            statusLabel = "Pending";
         }
         holder.statusBar.setBackgroundColor(barColor);
+        holder.tvStatusLabel.setText(statusLabel);
+        holder.tvStatusLabel.setTextColor(barColor);
+
+        int extraTagCount = countAdditionalTags(m.getContextTags());
+        if (extraTagCount > 0) {
+            holder.tvMoreTags.setVisibility(View.VISIBLE);
+            holder.tvMoreTags.setText("+" + extraTagCount + " more");
+        } else {
+            holder.tvMoreTags.setVisibility(View.GONE);
+        }
 
         String fb = feedbackTypeByMessageId.get(m.getId());
         if (FeedbackEntity.THUMBS_UP.equals(fb)) {
@@ -123,6 +139,19 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
         return s != null ? s.trim() : "";
     }
 
+    private static int countAdditionalTags(String contextTagsJson) {
+        String raw = safe(contextTagsJson);
+        if (raw.isEmpty()) {
+            return 0;
+        }
+        try {
+            JSONArray tags = new JSONArray(raw);
+            return tags.length();
+        } catch (JSONException ignored) {
+            return 0;
+        }
+    }
+
     @Override
     public int getItemCount() {
         return messages.size();
@@ -132,6 +161,7 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
         final View statusBar;
         final TextView tvRecipient;
         final TextView tvTimestamp;
+        final TextView tvStatusLabel;
         final TextView tvPreview;
         final Chip chip1;
         final Chip chip2;
@@ -144,6 +174,7 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
             statusBar = itemView.findViewById(R.id.view_status_indicator);
             tvRecipient = itemView.findViewById(R.id.tv_recipient_name);
             tvTimestamp = itemView.findViewById(R.id.tv_timestamp);
+            tvStatusLabel = itemView.findViewById(R.id.tv_status_label);
             tvPreview = itemView.findViewById(R.id.tv_message_preview);
             chip1 = itemView.findViewById(R.id.chip_context_1);
             chip2 = itemView.findViewById(R.id.chip_context_2);

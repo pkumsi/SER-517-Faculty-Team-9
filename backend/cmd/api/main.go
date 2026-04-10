@@ -73,7 +73,7 @@ func main() {
 	log.Printf("  GET  http://localhost%s/health", serverAddr)
 	log.Printf("  POST http://localhost%s/api/v1/response", serverAddr)
 	log.Printf("  POST http://localhost%s/api/v1/feedback", serverAddr)
-	log.Printf("Groq API key loaded: %v", cfg.LLM.APIKey != "")
+	log.Printf("OpenRouter API key loaded: %v", cfg.LLM.APIKey != "")
 	log.Printf("LLM base URL: %s", cfg.LLM.BaseURL)
 	log.Printf("LLM model: %s", cfg.LLM.Model)
 

@@ -427,7 +427,7 @@ public class PreviewActivity extends AppCompatActivity {
 
 
     private void handleThumbsUp() {
-        btnThumbsUp.setColorFilter(getResources().getColor(android.R.color.holo_green_dark));
+        btnThumbsUp.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_green_dark));
         btnThumbsDown.clearColorFilter();
         pendingThumbFeedback = true;
         persistPreviewFeedbackIfPossible();
@@ -436,7 +436,7 @@ public class PreviewActivity extends AppCompatActivity {
 
 
     private void handleThumbsDown() {
-        btnThumbsDown.setColorFilter(getResources().getColor(android.R.color.holo_red_dark));
+        btnThumbsDown.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_red_dark));
         btnThumbsUp.clearColorFilter();
         pendingThumbFeedback = false;
         persistPreviewFeedbackIfPossible();
@@ -595,7 +595,7 @@ public class PreviewActivity extends AppCompatActivity {
 
         // Update timer display to reflect cancellation
         tvTimer.setText("Send cancelled");
-        tvTimer.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+        tvTimer.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
 
         // Disable both buttons so action cannot be repeated
         btnCancel.setEnabled(false);

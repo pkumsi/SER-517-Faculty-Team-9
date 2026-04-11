@@ -1,6 +1,9 @@
 package com.example.carma_android_app;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 /**
@@ -25,5 +28,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupNavigation() {
         // TODO: Setup bottom navigation or tabs
+    }
+
+    /** Opens the saved-messages review screen from the home layout (US #179 / #200). */
+    public void openHomeReview(View v) {
+        startActivity(new Intent(this, ReviewActivity.class));
     }
 }

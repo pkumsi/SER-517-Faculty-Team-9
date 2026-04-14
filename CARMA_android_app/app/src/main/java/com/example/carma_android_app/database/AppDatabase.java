@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 
 @Database(
     entities = {MessageEntity.class, FeedbackEntity.class},
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {

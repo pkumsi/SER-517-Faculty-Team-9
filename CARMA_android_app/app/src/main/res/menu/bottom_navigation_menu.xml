@@ -9,9 +9,4 @@
         android:id="@+id/nav_review"
         android:icon="@android:drawable/ic_menu_view"
         android:title="Review" />
-
-    <item
-        android:id="@+id/nav_contacts"
-        android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="Contacts" />
 </menu>

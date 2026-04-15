@@ -177,6 +177,30 @@
                     style="@style/Widget.MaterialComponents.Chip.Entry" />
             </com.google.android.material.chip.ChipGroup>
 
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_preview_feedback"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:visibility="gone"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFF8E1"
+                app:strokeWidth="1dp"
+                app:strokeColor="#FFE082">
+
+                <TextView
+                    android:id="@+id/tv_preview_feedback"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp"
+                    android:text="Preview feedback: Message liked"
+                    android:textColor="#6D4C41"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+            </com.google.android.material.card.MaterialCardView>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

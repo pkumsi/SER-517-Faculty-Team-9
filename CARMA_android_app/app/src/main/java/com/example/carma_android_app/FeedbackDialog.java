@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import com.example.carma_android_app.database.FeedbackEntity;
 import com.example.carma_android_app.database.MessageEntity;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 
 import java.text.DateFormat;
@@ -31,7 +32,12 @@ import java.util.Locale;
 public class FeedbackDialog extends Dialog {
 
     public interface OnFeedbackSubmitListener {
-        void onFeedbackSubmitted(long messageId, boolean isPositive, @Nullable String comment);
+        void onFeedbackSubmitted(long messageId,
+                                 String q1Usefulness,
+                                 String q2Comfort,
+                                 String q3Appropriateness,
+                                 String q4ExplanationSense,
+                                 String q5Clarity);
     }
 
     private final MessageEntity message;
@@ -46,6 +52,8 @@ public class FeedbackDialog extends Dialog {
     private Chip chipActivity;
     private Chip chipSender;
     private Chip chipUrgency;
+    private MaterialCardView cardPreviewFeedback;
+    private TextView tvPreviewFeedback;
     private LinearLayout layoutActionButtons;
     private MaterialButton btnCancel;
     private MaterialButton btnSubmit;
@@ -91,6 +99,8 @@ public class FeedbackDialog extends Dialog {
         chipActivity = findViewById(R.id.chip_activity);
         chipSender = findViewById(R.id.chip_sender);
         chipUrgency = findViewById(R.id.chip_urgency);
+        cardPreviewFeedback = findViewById(R.id.card_preview_feedback);
+        tvPreviewFeedback = findViewById(R.id.tv_preview_feedback);
         layoutActionButtons = findViewById(R.id.layout_action_buttons);
         btnCancel = findViewById(R.id.btn_cancel);
         btnSubmit = findViewById(R.id.btn_submit);
@@ -103,6 +113,7 @@ public class FeedbackDialog extends Dialog {
 
         bindMessage(message);
         prefillExistingFeedbackIfAny();
+        applyReadOnlyStateIfReviewed();
 
         btnClose.setOnClickListener(v -> dismiss());
         btnCancel.setOnClickListener(v -> dismiss());
@@ -160,15 +171,75 @@ public class FeedbackDialog extends Dialog {
     }
 
     private void prefillExistingFeedbackIfAny() {
+        bindPreviewFeedbackSection();
         if (existingFeedback == null) {
             return;
         }
-        String type = existingFeedback.getFeedbackType();
-        if (FeedbackEntity.THUMBS_UP.equals(type)) {
-            setSelectionByText(rgQ1, "Somewhat useful");
-        } else if (FeedbackEntity.THUMBS_DOWN.equals(type)) {
-            setSelectionByText(rgQ1, "Not very useful");
+        // Prefer exact questionnaire values when available.
+        setSelectionByText(rgQ1, existingFeedback.getQ1Usefulness());
+        setSelectionByText(rgQ2, existingFeedback.getQ2Comfort());
+        setSelectionByText(rgQ3, existingFeedback.getQ3Appropriateness());
+        setSelectionByText(rgQ4, existingFeedback.getQ4ExplanationSense());
+        setSelectionByText(rgQ5, existingFeedback.getQ5Clarity());
+    }
+
+    private void applyReadOnlyStateIfReviewed() {
+        if (!hasQuestionnaireAnswers(existingFeedback)) {
+            return;
         }
+        if (btnSubmit != null) {
+            btnSubmit.setVisibility(View.GONE);
+        }
+        if (btnCancel != null) {
+            btnCancel.setText("Close");
+        }
+        setRadioGroupEnabled(rgQ1, false);
+        setRadioGroupEnabled(rgQ2, false);
+        setRadioGroupEnabled(rgQ3, false);
+        setRadioGroupEnabled(rgQ4, false);
+        setRadioGroupEnabled(rgQ5, false);
+    }
+
+    private static void setRadioGroupEnabled(RadioGroup group, boolean enabled) {
+        if (group == null) {
+            return;
+        }
+        group.setEnabled(enabled);
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            child.setEnabled(enabled);
+        }
+    }
+
+    private void bindPreviewFeedbackSection() {
+        if (cardPreviewFeedback == null || tvPreviewFeedback == null || existingFeedback == null) {
+            return;
+        }
+        String type = existingFeedback.getPreviewFeedbackType();
+        if (type == null || type.trim().isEmpty()) {
+            // Backward compatibility for rows saved before preview_feedback_type existed.
+            type = existingFeedback.getFeedbackType();
+        }
+        if (FeedbackEntity.THUMBS_UP.equals(type)) {
+            cardPreviewFeedback.setVisibility(View.VISIBLE);
+            tvPreviewFeedback.setText("Message liked when sent");
+        } else if (FeedbackEntity.THUMBS_DOWN.equals(type)) {
+            cardPreviewFeedback.setVisibility(View.VISIBLE);
+            tvPreviewFeedback.setText("Message disliked when sent");
+        } else {
+            cardPreviewFeedback.setVisibility(View.GONE);
+        }
+    }
+
+    private static boolean hasQuestionnaireAnswers(FeedbackEntity feedback) {
+        if (feedback == null) {
+            return false;
+        }
+        return !safe(feedback.getQ1Usefulness()).isEmpty()
+                || !safe(feedback.getQ2Comfort()).isEmpty()
+                || !safe(feedback.getQ3Appropriateness()).isEmpty()
+                || !safe(feedback.getQ4ExplanationSense()).isEmpty()
+                || !safe(feedback.getQ5Clarity()).isEmpty();
     }
 
     private static void setSelectionByText(RadioGroup group, String text) {
@@ -214,8 +285,7 @@ public class FeedbackDialog extends Dialog {
         }
 
         if (listener != null) {
-            boolean isPositive = "Very useful".equalsIgnoreCase(q1) || "Somewhat useful".equalsIgnoreCase(q1);
-            listener.onFeedbackSubmitted(message.getId(), isPositive, null);
+            listener.onFeedbackSubmitted(message.getId(), q1, q2, q3, q4, q5);
         }
         dismiss();
     }

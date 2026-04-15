@@ -92,9 +92,11 @@ public class ReviewActivity extends AppCompatActivity {
 
                 Map<Long, String> feedbackByMessage = new HashMap<>();
                 Map<Long, FeedbackEntity> feedbackEntityByMessage = new HashMap<>();
+                Map<Long, Boolean> reviewedByMessage = new HashMap<>();
                 for (FeedbackEntity f : feedbackList) {
                     feedbackByMessage.put(f.getMessageId(), f.getFeedbackType());
                     feedbackEntityByMessage.put(f.getMessageId(), f);
+                    reviewedByMessage.put(f.getMessageId(), hasQuestionnaireAnswers(f));
                 }
 
                 int positive = 0;
@@ -112,18 +114,25 @@ public class ReviewActivity extends AppCompatActivity {
                 final List<MessageEntity> messagesFinal = messages;
                 final Map<Long, String> fbFinal = feedbackByMessage;
                 final Map<Long, FeedbackEntity> feedbackEntityByMessageFinal = feedbackEntityByMessage;
+                final Map<Long, Boolean> reviewedByMessageFinal = reviewedByMessage;
                 final int posFinal = positive;
                 final int negFinal = negative;
 
                 runOnUiThread(() -> {
-                    adapter.setData(messagesFinal, fbFinal);
+                    adapter.setData(messagesFinal, fbFinal, reviewedByMessageFinal);
                     adapter.setOnMessageClickListener(message -> {
                         FeedbackDialog dialog = new FeedbackDialog(
                                 this,
                                 message,
                                 feedbackEntityByMessageFinal.get(message.getId()),
-                                (messageId, isPositive, comment) ->
-                                        feedbackRepository.saveOrReplaceFeedback(messageId, isPositive, comment,
+                                (messageId, q1Usefulness, q2Comfort, q3Appropriateness, q4ExplanationSense, q5Clarity) ->
+                                        feedbackRepository.saveOrReplaceQuestionnaireFeedback(
+                                                messageId,
+                                                q1Usefulness,
+                                                q2Comfort,
+                                                q3Appropriateness,
+                                                q4ExplanationSense,
+                                                q5Clarity,
                                                 new FeedbackRepository.Callback<Long>() {
                                                     @Override
                                                     public void onSuccess(Long id) {
@@ -159,6 +168,21 @@ public class ReviewActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show());
             }
         });
+    }
+
+    private static boolean hasQuestionnaireAnswers(FeedbackEntity feedback) {
+        if (feedback == null) {
+            return false;
+        }
+        return notBlank(feedback.getQ1Usefulness())
+                || notBlank(feedback.getQ2Comfort())
+                || notBlank(feedback.getQ3Appropriateness())
+                || notBlank(feedback.getQ4ExplanationSense())
+                || notBlank(feedback.getQ5Clarity());
+    }
+
+    private static boolean notBlank(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     @Override

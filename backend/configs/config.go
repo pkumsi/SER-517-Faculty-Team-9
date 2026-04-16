@@ -16,7 +16,6 @@ type Config struct {
 	Server  ServerConfig
 	Logging LoggingConfig
 	API     APIConfig
-	// OpenAI   OpenAIConfig
 	LLM     LLMConfig
 	Metrics MetricsConfig
 }

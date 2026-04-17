@@ -9,6 +9,7 @@ import (
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/configs"
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/handlers"
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/logger"
+	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/memory"
 )
 
 func main() {
@@ -56,6 +57,10 @@ func main() {
 	llmHandler := handlers.NewLLMHandler(cfg)
 	feedbackHandler := handlers.NewFeedbackHandler()
 
+	// In-memory record store for the standalone memory service.
+	memStore := memory.New(cfg.Memory.PerUserCapacity)
+	memHandler := memory.NewHandler(memStore)
+
 	// LLM response generation endpoint
 	// POST /api/v1/response
 	// Accepts LLMResponseRequest, returns LLMResponseResult
@@ -63,6 +68,7 @@ func main() {
 	{
 		v1.POST("/response", llmHandler.GenerateAutoResponse)
 		v1.POST("/feedback", feedbackHandler.SubmitFeedback)
+		memHandler.RegisterRoutes(v1)
 	}
 
 	serverAddr := ":" + cfg.Server.Port
@@ -73,6 +79,9 @@ func main() {
 	log.Printf("  GET  http://localhost%s/health", serverAddr)
 	log.Printf("  POST http://localhost%s/api/v1/response", serverAddr)
 	log.Printf("  POST http://localhost%s/api/v1/feedback", serverAddr)
+	log.Printf("  POST http://localhost%s/api/v1/memory", serverAddr)
+	log.Printf("  GET  http://localhost%s/api/v1/memory/:uuid", serverAddr)
+	log.Printf("  DEL  http://localhost%s/api/v1/memory/:uuid/:id", serverAddr)
 	log.Printf("OpenRouter API key loaded: %v", cfg.LLM.APIKey != "")
 	log.Printf("LLM base URL: %s", cfg.LLM.BaseURL)
 	log.Printf("LLM model: %s", cfg.LLM.Model)

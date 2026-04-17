@@ -18,6 +18,7 @@ type Config struct {
 	API     APIConfig
 	LLM     LLMConfig
 	Metrics MetricsConfig
+	Memory  MemoryConfig
 }
 
 // struct for server-related configuration
@@ -51,6 +52,12 @@ type LLMConfig struct {
 type MetricsConfig struct {
 	Enabled bool
 	Port    string
+}
+
+// MemoryConfig holds settings for the in-memory record store.
+// PerUserCapacity <= 0 means unlimited.
+type MemoryConfig struct {
+	PerUserCapacity int
 }
 
 // LoadConfig loads configuration from environment variables
@@ -88,6 +95,9 @@ func LoadConfig() (*Config, error) {
 		Metrics: MetricsConfig{
 			Enabled: getEnvAsBool("ENABLE_METRICS", true),
 			Port:    getEnv("METRICS_PORT", "9090"),
+		},
+		Memory: MemoryConfig{
+			PerUserCapacity: getEnvAsInt("MEMORY_PER_USER_CAPACITY", 100),
 		},
 	}
 

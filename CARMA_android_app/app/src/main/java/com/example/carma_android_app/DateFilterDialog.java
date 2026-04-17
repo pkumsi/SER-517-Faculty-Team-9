@@ -4,12 +4,14 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import com.example.carma_android_app.R;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -18,6 +20,7 @@ public class DateFilterDialog extends Dialog {
     private TextView tvFromDate, tvToDate;
     private Button btnApply, btnCancel;
     private long fromDate = -1, toDate = -1;
+    private boolean selectingStart = true;
     private OnDateFilterListener listener;
 
     public interface OnDateFilterListener {
@@ -30,6 +33,15 @@ public class DateFilterDialog extends Dialog {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        if (getWindow() != null) {
+            int width = (int) (getContext().getResources().getDisplayMetrics().widthPixels * 0.92f);
+            getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.dialog_date_filter);
@@ -38,17 +50,34 @@ public class DateFilterDialog extends Dialog {
         tvToDate = findViewById(R.id.tv_to_date);
         btnApply = findViewById(R.id.btn_apply);
         btnCancel = findViewById(R.id.btn_cancel);
+        btnApply.setEnabled(false);
 
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
-            long selectedDate = new Date(year - 1900, month, dayOfMonth).getTime();
-            if (fromDate == -1 || (fromDate != -1 && toDate != -1)) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.YEAR, year);
+            calendar.set(Calendar.MONTH, month);
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            long selectedDate = calendar.getTimeInMillis();
+            if (selectingStart) {
                 fromDate = selectedDate;
                 toDate = -1;
-                tvFromDate.setText(formatDate(selectedDate));
-                tvToDate.setText("MM/DD/YYYY");
+                selectingStart = false;
+                tvFromDate.setText(formatDate(fromDate));
+                tvToDate.setText("Not selected");
+                btnApply.setEnabled(false);
             } else {
-                toDate = selectedDate;
-                tvToDate.setText(formatDate(selectedDate));
+                long start = Math.min(fromDate, selectedDate);
+                long end = Math.max(fromDate, selectedDate);
+                fromDate = start;
+                toDate = end;
+                selectingStart = true;
+                tvFromDate.setText(formatDate(fromDate));
+                tvToDate.setText(formatDate(toDate));
+                btnApply.setEnabled(true);
             }
         });
 

@@ -172,9 +172,12 @@ public class ContextInputActivity extends AppCompatActivity {
             }
 
             List<?> messages = ResponseParser.parseAutoResponseResult(response);
-            String messageText = messages.isEmpty()
-                    ? "No response generated."
-                    : ((com.example.carma_android_app.models.AutoResponseMessage) messages.get(0)).getMessageText();
+            com.example.carma_android_app.models.AutoResponseMessage firstMessage =
+                    messages.isEmpty() ? null
+                    : (com.example.carma_android_app.models.AutoResponseMessage) messages.get(0);
+            String messageText  = firstMessage != null ? firstMessage.getMessageText() : "No response generated.";
+            String explanation  = firstMessage != null && firstMessage.getExplanation() != null
+                    ? firstMessage.getExplanation() : "";
 
             String parsedRequestId = requestId;
             String parsedUuid      = uuid;
@@ -187,12 +190,13 @@ public class ContextInputActivity extends AppCompatActivity {
             } catch (Exception ignored) { }
 
             Intent intent = new Intent(ContextInputActivity.this, PreviewActivity.class);
-            intent.putExtra(PreviewActivity.EXTRA_MESSAGE_TEXT, messageText);
-            intent.putExtra(PreviewActivity.EXTRA_REQUEST_ID,   parsedRequestId);
-            intent.putExtra(PreviewActivity.EXTRA_UUID,         parsedUuid);
-            intent.putExtra(PreviewActivity.EXTRA_ACTIVITY,     "");
-            intent.putExtra(PreviewActivity.EXTRA_LOCATION,     "");
-            intent.putExtra(PreviewActivity.EXTRA_NOTIF_APP,    "");
+            intent.putExtra(PreviewActivity.EXTRA_MESSAGE_TEXT,  messageText);
+            intent.putExtra(PreviewActivity.EXTRA_EXPLANATION,   explanation);
+            intent.putExtra(PreviewActivity.EXTRA_REQUEST_ID,    parsedRequestId);
+            intent.putExtra(PreviewActivity.EXTRA_UUID,          parsedUuid);
+            intent.putExtra(PreviewActivity.EXTRA_ACTIVITY,      "");
+            intent.putExtra(PreviewActivity.EXTRA_LOCATION,      "");
+            intent.putExtra(PreviewActivity.EXTRA_NOTIF_APP,     "");
             startActivity(intent);
         }
     }

@@ -31,6 +31,7 @@ public class PreviewActivity extends AppCompatActivity {
 
     // Intent extra keys — set by ContextInputActivity
     public static final String EXTRA_MESSAGE_TEXT = "extra_message_text";
+    public static final String EXTRA_EXPLANATION  = "extra_explanation";
     public static final String EXTRA_REQUEST_ID   = "extra_request_id";
     public static final String EXTRA_UUID         = "extra_uuid";
     public static final String EXTRA_ACTIVITY     = "extra_activity";
@@ -62,6 +63,9 @@ public class PreviewActivity extends AppCompatActivity {
     private MaterialCardView cardMessage;
     private TextView tvMessageContent;
     private TextView tvEditable;
+
+    // Explanation section
+    private TextView tvExplanation;
 
     // Action buttons
     private MaterialButton btnCancel;
@@ -141,6 +145,9 @@ public class PreviewActivity extends AppCompatActivity {
         tvMessageContent = findViewById(R.id.tv_message_content);
         tvEditable = findViewById(R.id.tv_editable);
 
+        // Explanation section
+        tvExplanation = findViewById(R.id.tv_explanation);
+
         // Action buttons
         btnCancel = findViewById(R.id.btn_cancel);
         btnSendNow = findViewById(R.id.btn_send_now);
@@ -199,12 +206,13 @@ public class PreviewActivity extends AppCompatActivity {
 
         if (hasRealData) {
             // Populate from backend response passed via Intent
-            String messageText = intent.getStringExtra(EXTRA_MESSAGE_TEXT);
-            requestId          = intent.getStringExtra(EXTRA_REQUEST_ID);
-            uuid               = intent.getStringExtra(EXTRA_UUID);
-            String activity    = intent.getStringExtra(EXTRA_ACTIVITY);
-            String location    = intent.getStringExtra(EXTRA_LOCATION);
-            String notifApp    = intent.getStringExtra(EXTRA_NOTIF_APP);
+            String messageText  = intent.getStringExtra(EXTRA_MESSAGE_TEXT);
+            String explanText   = intent.getStringExtra(EXTRA_EXPLANATION);
+            requestId           = intent.getStringExtra(EXTRA_REQUEST_ID);
+            uuid                = intent.getStringExtra(EXTRA_UUID);
+            String activity     = intent.getStringExtra(EXTRA_ACTIVITY);
+            String location     = intent.getStringExtra(EXTRA_LOCATION);
+            String notifApp     = intent.getStringExtra(EXTRA_NOTIF_APP);
 
             // Map raw values back to human-readable chip labels
             String activityLabel = mapActivityLabel(activity);
@@ -249,6 +257,20 @@ public class PreviewActivity extends AppCompatActivity {
             previewScreenData.getContextTags().get(1),
             previewScreenData.getContextTags().get(2)
         );
+
+        // Show explanation if available
+        if (hasRealData) {
+            String explanText = intent.getStringExtra(EXTRA_EXPLANATION);
+            if (explanText != null && !explanText.isEmpty()) {
+                tvExplanation.setText("Why this response: " + explanText);
+                tvExplanation.setVisibility(android.view.View.VISIBLE);
+            } else {
+                tvExplanation.setVisibility(android.view.View.GONE);
+            }
+        } else {
+            tvExplanation.setVisibility(android.view.View.GONE);
+        }
+
         bottomNavigation.setSelectedItemId(R.id.nav_preview);
     }
 

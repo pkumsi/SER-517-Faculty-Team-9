@@ -9,11 +9,11 @@ import (
 	openai "github.com/sashabaranov/go-openai"
 )
 
-// callLLM sends the prompt to an OpenAI-compatible API (default: Groq).
+// callLLM sends the prompt to the OpenRouter API.
 // baseURL, model, and apiKey come from configs.LLMConfig via the handler.
 func callLLM(prompt string, model string, apiKey string, baseURL string) (string, error) {
 	if apiKey == "" {
-		return "", errors.New("GROQ_API_KEY is not set")
+		return "", errors.New("OPENROUTER_API_KEY is not set")
 	}
 	if model == "" {
 		return "", errors.New("LLM model is not set")

@@ -16,7 +16,6 @@ type Config struct {
 	Server  ServerConfig
 	Logging LoggingConfig
 	API     APIConfig
-	// OpenAI   OpenAIConfig
 	LLM     LLMConfig
 	Metrics MetricsConfig
 }
@@ -40,7 +39,7 @@ type APIConfig struct {
 	Timeout time.Duration
 }
 
-// LLMConfig holds OpenAI-compatible provider settings (default: Groq).
+// LLMConfig holds OpenAI-compatible provider settings (OpenRouter).
 type LLMConfig struct {
 	BaseURL   string
 	APIKey    string
@@ -81,9 +80,9 @@ func LoadConfig() (*Config, error) {
 			Timeout: getEnvAsDuration("API_TIMEOUT", 30*time.Second),
 		},
 		LLM: LLMConfig{
-			BaseURL:   strings.TrimSpace(getEnv("LLM_BASE_URL", "https://api.groq.com/openai/v1")),
-			APIKey:    strings.TrimSpace(getEnv("GROQ_API_KEY", "")),
-			Model:     strings.TrimSpace(getEnv("LLM_MODEL", "llama-3.3-70b-versatile")),
+			BaseURL:   strings.TrimSpace(getEnv("LLM_BASE_URL", "https://openrouter.ai/api/v1")),
+			APIKey:    strings.TrimSpace(getEnv("OPENROUTER_API_KEY", "")),
+			Model:     strings.TrimSpace(getEnv("LLM_MODEL", "nvidia/nemotron-nano-9b-v2:free")),
 			MaxTokens: getEnvAsInt("LLM_MAX_TOKENS", 1000),
 		},
 		Metrics: MetricsConfig{
@@ -102,9 +101,8 @@ func LoadConfig() (*Config, error) {
 
 // Validate checks if required configuration values are set
 func (c *Config) Validate() error {
-	// Groq (or other OpenAI-compatible) API key
 	if c.LLM.APIKey == "" {
-		return fmt.Errorf("GROQ_API_KEY is required but not set")
+		return fmt.Errorf("OPENROUTER_API_KEY is required but not set")
 	}
 
 	// Validate log level
@@ -155,6 +153,7 @@ func getEnv(key, defaultValue string) string {
 	}
 	return value
 }
+
 
 func getEnvAsInt(key string, defaultValue int) int {
 	valueStr := os.Getenv(key)

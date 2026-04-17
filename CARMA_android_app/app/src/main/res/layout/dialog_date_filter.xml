@@ -1,206 +1,162 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="20dp"
+    android:fillViewport="true"
     android:background="@android:color/white">
-
-    <!-- Dialog Title -->
-    <TextView
-        android:id="@+id/tv_dialog_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select Date Range"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="#212121"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Calendar View -->
-    <CalendarView
-        android:id="@+id/calendar_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:dateTextAppearance="@style/CalendarDateText"
-        android:weekDayTextAppearance="@style/CalendarWeekDayText" />
-
-    <!-- OR Text -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="OR"
-        android:textSize="14sp"
-        android:textColor="#9E9E9E"
-        android:textStyle="bold"
-        android:layout_gravity="center"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Date Range Selection -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select Custom Range:"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:textColor="#616161"
-        android:layout_marginBottom="12dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <!-- From Date -->
-        <LinearLayout
-            android:layout_width="0dp"
+        <TextView
+            android:id="@+id/tv_dialog_title"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginEnd="8dp">
+            android:text="Select Date Range"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#212121"
+            android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="From:"
-                android:textSize="12sp"
-                android:textColor="#757575"
-                android:layout_marginBottom="4dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tap once for a single day, or tap start and end dates."
+            android:textSize="13sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="12dp" />
+
+        <CalendarView
+            android:id="@+id/calendar_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:dateTextAppearance="@style/CalendarDateText"
+            android:weekDayTextAppearance="@style/CalendarWeekDayText" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selected Range"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#616161"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_from_date"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
                 app:cardCornerRadius="8dp"
-                app:cardElevation="2dp"
+                app:cardElevation="0dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="#E0E0E0"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
+                app:strokeColor="#E0E0E0">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="12dp"
-                    android:gravity="center_vertical">
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@android:drawable/ic_menu_my_calendar"
-                        android:contentDescription="Calendar"
-                        app:tint="#757575" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="From"
+                        android:textSize="12sp"
+                        android:textColor="#757575" />
 
                     <TextView
                         android:id="@+id/tv_from_date"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="MM/DD/YYYY"
-                        android:textSize="14sp"
+                        android:layout_marginTop="4dp"
+                        android:text="Not selected"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
                         android:textColor="#212121"
-                        android:layout_marginStart="8dp" />
-
+                        android:maxLines="1"
+                        android:ellipsize="end" />
                 </LinearLayout>
-
             </com.google.android.material.card.MaterialCardView>
 
-        </LinearLayout>
-
-        <!-- To Date -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginStart="8dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="To:"
-                android:textSize="12sp"
-                android:textColor="#757575"
-                android:layout_marginBottom="4dp" />
-
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/card_to_date"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
                 app:cardCornerRadius="8dp"
-                app:cardElevation="2dp"
+                app:cardElevation="0dp"
                 app:strokeWidth="1dp"
-                app:strokeColor="#E0E0E0"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
+                app:strokeColor="#E0E0E0">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="12dp"
-                    android:gravity="center_vertical">
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@android:drawable/ic_menu_my_calendar"
-                        android:contentDescription="Calendar"
-                        app:tint="#757575" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="To"
+                        android:textSize="12sp"
+                        android:textColor="#757575" />
 
                     <TextView
                         android:id="@+id/tv_to_date"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="MM/DD/YYYY"
-                        android:textSize="14sp"
+                        android:layout_marginTop="4dp"
+                        android:text="Not selected"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
                         android:textColor="#212121"
-                        android:layout_marginStart="8dp" />
-
+                        android:maxLines="1"
+                        android:ellipsize="end" />
                 </LinearLayout>
-
             </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_cancel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Cancel"
+                android:textAllCaps="false"
+                android:maxLines="1"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_apply"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Apply"
+                android:textAllCaps="false"
+                android:maxLines="1"
+                android:textColor="#FFFFFF"
+                app:backgroundTint="#2196F3" />
         </LinearLayout>
 
     </LinearLayout>
-
-    <!-- Action Buttons -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="24dp">
-
-        <!-- Cancel Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_cancel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Cancel"
-            android:textColor="#757575"
-            android:layout_marginEnd="8dp"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-        <!-- Apply Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_apply"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Apply Filter"
-            android:textColor="#FFFFFF"
-            app:backgroundTint="#2196F3"
-            android:layout_marginStart="8dp" />
-
-    </LinearLayout>
-
-</LinearLayout>
+</ScrollView>

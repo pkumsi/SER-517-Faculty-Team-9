@@ -3,27 +3,29 @@ package com.example.carma_android_app;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.carma_android_app.database.FeedbackEntity;
 import com.example.carma_android_app.database.MessageEntity;
-import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
-import com.google.android.material.textfield.TextInputEditText;
 
 import java.text.DateFormat;
 import java.util.Locale;
 
 /**
- * Shows message details and collects thumbs feedback + optional comment.
+ * Shows message details and collects questionnaire feedback.
  * Used from Review when the user taps a saved message.
  */
 public class FeedbackDialog extends Dialog {
@@ -41,22 +43,21 @@ public class FeedbackDialog extends Dialog {
     private TextView tvStatus;
     private TextView tvMessageContent;
     private ImageButton btnClose;
-    private MaterialCardView cardThumbsUp;
-    private MaterialCardView cardThumbsDown;
-    private ImageView ivThumbsUp;
-    private ImageView ivThumbsDown;
     private Chip chipActivity;
     private Chip chipSender;
     private Chip chipUrgency;
-    private LinearLayout layoutComments;
     private LinearLayout layoutActionButtons;
-    private TextInputEditText etComments;
     private MaterialButton btnCancel;
     private MaterialButton btnSubmit;
 
-    private boolean pendingPositive = true;
+    private RadioGroup rgQ1;
+    private RadioGroup rgQ2;
+    private RadioGroup rgQ3;
+    private RadioGroup rgQ4;
+    private RadioGroup rgQ5;
 
-    public FeedbackDialog(@NonNull Context context, @NonNull MessageEntity message,
+    public FeedbackDialog(@NonNull Context context,
+                          @NonNull MessageEntity message,
                           @Nullable FeedbackEntity existingFeedback,
                           @Nullable OnFeedbackSubmitListener listener) {
         super(context);
@@ -73,10 +74,13 @@ public class FeedbackDialog extends Dialog {
 
         android.view.Window w = getWindow();
         if (w != null) {
+            int screenHeight = getContext().getResources().getDisplayMetrics().heightPixels;
             w.setLayout(
                     (int) (getContext().getResources().getDisplayMetrics().widthPixels * 0.92),
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                    (int) (screenHeight * 0.88)
             );
+            w.setGravity(Gravity.CENTER);
+            w.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         }
 
         tvRecipientName = findViewById(R.id.tv_recipient_name);
@@ -84,40 +88,25 @@ public class FeedbackDialog extends Dialog {
         tvStatus = findViewById(R.id.tv_status);
         tvMessageContent = findViewById(R.id.tv_message_content);
         btnClose = findViewById(R.id.btn_close);
-        cardThumbsUp = (MaterialCardView) findViewById(R.id.card_thumbs_up);
-        cardThumbsDown = (MaterialCardView) findViewById(R.id.card_thumbs_down);
-        ivThumbsUp = findViewById(R.id.iv_thumbs_up);
-        ivThumbsDown = findViewById(R.id.iv_thumbs_down);
         chipActivity = findViewById(R.id.chip_activity);
         chipSender = findViewById(R.id.chip_sender);
         chipUrgency = findViewById(R.id.chip_urgency);
-        layoutComments = findViewById(R.id.layout_comments);
         layoutActionButtons = findViewById(R.id.layout_action_buttons);
-        etComments = findViewById(R.id.et_comments);
         btnCancel = findViewById(R.id.btn_cancel);
         btnSubmit = findViewById(R.id.btn_submit);
 
-        bindMessage(message);
+        rgQ1 = findViewById(R.id.rg_q1);
+        rgQ2 = findViewById(R.id.rg_q2);
+        rgQ3 = findViewById(R.id.rg_q3);
+        rgQ4 = findViewById(R.id.rg_q4);
+        rgQ5 = findViewById(R.id.rg_q5);
 
-        layoutComments.setVisibility(View.GONE);
-        layoutActionButtons.setVisibility(View.GONE);
+        bindMessage(message);
+        prefillExistingFeedbackIfAny();
 
         btnClose.setOnClickListener(v -> dismiss());
-
-        cardThumbsUp.setOnClickListener(v -> setFeedbackSelection(true, true));
-        cardThumbsDown.setOnClickListener(v -> setFeedbackSelection(false, true));
-
-        btnCancel.setOnClickListener(v -> {
-            layoutComments.setVisibility(View.GONE);
-            layoutActionButtons.setVisibility(View.GONE);
-            if (etComments != null) {
-                etComments.setText("");
-            }
-        });
-
+        btnCancel.setOnClickListener(v -> dismiss());
         btnSubmit.setOnClickListener(v -> submit());
-
-        prefillExistingFeedbackIfAny();
     }
 
     private void bindMessage(MessageEntity m) {
@@ -171,43 +160,62 @@ public class FeedbackDialog extends Dialog {
     }
 
     private void prefillExistingFeedbackIfAny() {
-        if (existingFeedback == null || existingFeedback.getFeedbackType() == null) {
-            setFeedbackSelection(true, false);
+        if (existingFeedback == null) {
             return;
         }
-        boolean isPositive = FeedbackEntity.THUMBS_UP.equals(existingFeedback.getFeedbackType());
-        setFeedbackSelection(isPositive, true);
-        String existingComment = existingFeedback.getComment();
-        if (etComments != null && existingComment != null) {
-            etComments.setText(existingComment);
+        String type = existingFeedback.getFeedbackType();
+        if (FeedbackEntity.THUMBS_UP.equals(type)) {
+            setSelectionByText(rgQ1, "Somewhat useful");
+        } else if (FeedbackEntity.THUMBS_DOWN.equals(type)) {
+            setSelectionByText(rgQ1, "Not very useful");
         }
     }
 
-    private void setFeedbackSelection(boolean isPositive, boolean showEditor) {
-        pendingPositive = isPositive;
+    private static void setSelectionByText(RadioGroup group, String text) {
+        if (group == null || text == null) {
+            return;
+        }
+        int childCount = group.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = group.getChildAt(i);
+            if (!(child instanceof RadioButton)) {
+                continue;
+            }
+            RadioButton rb = (RadioButton) child;
+            if (text.equalsIgnoreCase(String.valueOf(rb.getText()))) {
+                rb.setChecked(true);
+                return;
+            }
+        }
+    }
 
-        int selectedStroke = 0xFF2196F3;
-        int defaultStroke = 0xFFE0E0E0;
-        if (cardThumbsUp != null && cardThumbsDown != null) {
-            cardThumbsUp.setStrokeColor(isPositive ? selectedStroke : defaultStroke);
-            cardThumbsDown.setStrokeColor(isPositive ? defaultStroke : selectedStroke);
+    private static String getSelectedText(RadioGroup group) {
+        if (group == null) {
+            return null;
         }
-        if (ivThumbsUp != null && ivThumbsDown != null) {
-            ivThumbsUp.setColorFilter(isPositive ? 0xFF4CAF50 : 0xFF757575);
-            ivThumbsDown.setColorFilter(isPositive ? 0xFF757575 : 0xFFF44336);
+        int selectedId = group.getCheckedRadioButtonId();
+        if (selectedId == -1) {
+            return null;
         }
-
-        if (showEditor) {
-            layoutComments.setVisibility(View.VISIBLE);
-            layoutActionButtons.setVisibility(View.VISIBLE);
-        }
+        RadioButton rb = group.findViewById(selectedId);
+        return rb != null ? String.valueOf(rb.getText()) : null;
     }
 
     private void submit() {
-        String comment = etComments != null ? etComments.getText().toString().trim() : "";
+        String q1 = getSelectedText(rgQ1);
+        String q2 = getSelectedText(rgQ2);
+        String q3 = getSelectedText(rgQ3);
+        String q4 = getSelectedText(rgQ4);
+        String q5 = getSelectedText(rgQ5);
+
+        if (q1 == null || q2 == null || q3 == null || q4 == null || q5 == null) {
+            Toast.makeText(getContext(), "Please answer all questions", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (listener != null) {
-            listener.onFeedbackSubmitted(message.getId(), pendingPositive,
-                    comment.isEmpty() ? null : comment);
+            boolean isPositive = "Very useful".equalsIgnoreCase(q1) || "Somewhat useful".equalsIgnoreCase(q1);
+            listener.onFeedbackSubmitted(message.getId(), isPositive, null);
         }
         dismiss();
     }

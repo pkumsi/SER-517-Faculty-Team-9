@@ -1,6 +1,5 @@
 package com.example.carma_android_app;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -63,10 +62,6 @@ public class ReviewActivity extends AppCompatActivity {
                     return true;
                 }
                 if (itemId == R.id.nav_review) {
-                    return true;
-                }
-                if (itemId == R.id.nav_contacts) {
-                    startActivity(new Intent(this, SettingsActivity.class));
                     return true;
                 }
                 return false;

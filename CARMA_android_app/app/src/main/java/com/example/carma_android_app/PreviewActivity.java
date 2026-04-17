@@ -189,9 +189,6 @@ public class PreviewActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_review) {
                 navigateToReview();
                 return true;
-            } else if (itemId == R.id.nav_contacts) {
-                navigateToContacts();
-                return true;
             }
             return false;
         });
@@ -631,11 +628,6 @@ public class PreviewActivity extends AppCompatActivity {
 
     private void navigateToReview() {
         startActivity(new Intent(this, ReviewActivity.class));
-    }
-
-    /** Contacts screen is not implemented; open rule settings instead. */
-    private void navigateToContacts() {
-        startActivity(new Intent(this, SettingsActivity.class));
     }
 
     @Override

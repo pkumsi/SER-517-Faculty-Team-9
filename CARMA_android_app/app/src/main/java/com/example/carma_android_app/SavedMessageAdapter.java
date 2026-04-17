@@ -34,6 +34,7 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
 
     private List<MessageEntity> messages = new ArrayList<>();
     private Map<Long, String> feedbackTypeByMessageId = new HashMap<>();
+    private Map<Long, Boolean> reviewedByMessageId = new HashMap<>();
     private final DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, Locale.getDefault());
     private OnMessageClickListener messageClickListener;
 
@@ -41,9 +42,12 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
         this.messageClickListener = listener;
     }
 
-    public void setData(List<MessageEntity> messages, Map<Long, String> feedbackTypeByMessageId) {
+    public void setData(List<MessageEntity> messages,
+                        Map<Long, String> feedbackTypeByMessageId,
+                        Map<Long, Boolean> reviewedByMessageId) {
         this.messages = messages != null ? messages : new ArrayList<>();
         this.feedbackTypeByMessageId = feedbackTypeByMessageId != null ? feedbackTypeByMessageId : new HashMap<>();
+        this.reviewedByMessageId = reviewedByMessageId != null ? reviewedByMessageId : new HashMap<>();
         notifyDataSetChanged();
     }
 
@@ -101,7 +105,8 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
             statusLabel = "Pending";
         }
         holder.statusBar.setBackgroundColor(barColor);
-        holder.tvStatusLabel.setText(statusLabel);
+        boolean reviewed = Boolean.TRUE.equals(reviewedByMessageId.get(m.getId()));
+        holder.tvStatusLabel.setText(reviewed ? (statusLabel + " • Reviewed") : statusLabel);
         holder.tvStatusLabel.setTextColor(barColor);
 
         List<String> extraTags = parseAdditionalTags(m.getContextTags());
@@ -116,9 +121,11 @@ public class SavedMessageAdapter extends RecyclerView.Adapter<SavedMessageAdapte
             holder.tvMoreTags.setVisibility(View.GONE);
         }
 
-        // Keep feedback in DB and dialog flow, but do not display like/dislike on the card list UI.
+        // Keep feedback in DB and dialog flow, but do not display like/dislike icon on the card list UI.
         holder.ivFeedback.setVisibility(View.GONE);
-        holder.tvNoFeedback.setVisibility(View.GONE);
+        holder.tvNoFeedback.setVisibility(reviewed ? View.VISIBLE : View.GONE);
+        holder.tvNoFeedback.setText("Reviewed");
+        holder.tvNoFeedback.setTextColor(Color.parseColor("#4CAF50"));
 
         holder.itemView.setOnClickListener(v -> {
             if (messageClickListener != null) {

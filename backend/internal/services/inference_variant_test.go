@@ -39,6 +39,13 @@ func TestSelectVariant(t *testing.T) {
             },
             expected: VariantMinimal,
         },
+		{
+			name: "Only activity present (Minimal fallback)",
+			elements: InferredElements{
+				Activity: "meeting",
+			},
+			expected: VariantMinimal,
+		},
     }
 
     for _, tt := range tests {

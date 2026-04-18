@@ -87,6 +87,7 @@ public class ApiRequestBuilder {
             int isSilent,
             String backgroundConvo,
             String weather,
+            String deviceState,
             String onCall) {
 
         try {
@@ -135,7 +136,7 @@ public class ApiRequestBuilder {
 
             // Call status — On_Call is int64 in backend model (0 or 1)
             if (onCall != null) ctx.put("On_Call", Integer.parseInt(onCall));
-
+            if (deviceState != null) ctx.put("DeviceState", deviceState);
             // Predicted availability — 0 = busy (user is manually triggering
             // auto-reply, so we assume they are not immediately available)
             ctx.put("Predicted_Availability", "0");

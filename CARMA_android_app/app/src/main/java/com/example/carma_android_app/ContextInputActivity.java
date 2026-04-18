@@ -21,6 +21,7 @@ import com.google.android.material.button.MaterialButton;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -79,12 +80,15 @@ public class ContextInputActivity extends AppCompatActivity {
     private void loadSampleContext() {
         try {
             InputStream is = getAssets().open("sample_data.json");
-            byte[] buffer = new byte[is.available()];
-            //noinspection ResultOfMethodCallIgnored
-            is.read(buffer);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = is.read(buf)) != -1) {
+                baos.write(buf, 0, n);
+            }
             is.close();
 
-            JSONArray rows = new JSONArray(new String(buffer, StandardCharsets.UTF_8));
+            JSONArray rows = new JSONArray(baos.toString(StandardCharsets.UTF_8.name()));
             int index = new Random().nextInt(rows.length());
             loadedContext = rows.getJSONObject(index);
 

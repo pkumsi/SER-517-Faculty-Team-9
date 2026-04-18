@@ -1,6 +1,9 @@
 package com.example.carma_android_app;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 /**
@@ -27,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
         // TODO: Setup bottom navigation or tabs
     }
 
+    /** Opens the saved-messages review screen from the home layout (US #179 / #200). */
+    public void openHomeReview(View v) {
+        startActivity(new Intent(this, ReviewActivity.class));
     /** Opens settings from the home layout (US #179 / #201). Uses FQN to ease parallel merges with #200. */
     public void openHomeSettings(android.view.View v) {
         startActivity(new android.content.Intent(this, SettingsActivity.class));

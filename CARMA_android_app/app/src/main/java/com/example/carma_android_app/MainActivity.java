@@ -26,4 +26,9 @@ public class MainActivity extends AppCompatActivity {
     private void setupNavigation() {
         // TODO: Setup bottom navigation or tabs
     }
+
+    /** Opens settings from the home layout (US #179 / #201). Uses FQN to ease parallel merges with #200. */
+    public void openHomeSettings(android.view.View v) {
+        startActivity(new android.content.Intent(this, SettingsActivity.class));
+    }
 }

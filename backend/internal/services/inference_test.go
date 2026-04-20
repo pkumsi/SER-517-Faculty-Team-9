@@ -244,6 +244,16 @@ func TestInferCurrentTime(t *testing.T) {
 		})
 	}
 }
+func TestPtrHelpers(t *testing.T) {
+    s := "hello"
+    i := int64(42)
+    if ptrStr(s) == nil || *ptrStr(s) != s {
+        t.Errorf("ptrStr failed")
+    }
+    if ptrInt(i) == nil || *ptrInt(i) != i {
+        t.Errorf("ptrInt failed")
+    }
+}
 
 // TestInferExpectedResponseTime tests expected response time inference from event timing
 func TestInferExpectedResponseTime(t *testing.T) {

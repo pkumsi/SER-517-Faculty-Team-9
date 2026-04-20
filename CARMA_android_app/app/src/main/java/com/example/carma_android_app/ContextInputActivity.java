@@ -21,6 +21,7 @@ import com.google.android.material.button.MaterialButton;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -79,12 +80,15 @@ public class ContextInputActivity extends AppCompatActivity {
     private void loadSampleContext() {
         try {
             InputStream is = getAssets().open("sample_data.json");
-            byte[] buffer = new byte[is.available()];
-            //noinspection ResultOfMethodCallIgnored
-            is.read(buffer);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = is.read(buf)) != -1) {
+                baos.write(buf, 0, n);
+            }
             is.close();
 
-            JSONArray rows = new JSONArray(new String(buffer, StandardCharsets.UTF_8));
+            JSONArray rows = new JSONArray(baos.toString(StandardCharsets.UTF_8.name()));
             int index = new Random().nextInt(rows.length());
             loadedContext = rows.getJSONObject(index);
 
@@ -172,9 +176,12 @@ public class ContextInputActivity extends AppCompatActivity {
             }
 
             List<?> messages = ResponseParser.parseAutoResponseResult(response);
-            String messageText = messages.isEmpty()
-                    ? "No response generated."
-                    : ((com.example.carma_android_app.models.AutoResponseMessage) messages.get(0)).getMessageText();
+            com.example.carma_android_app.models.AutoResponseMessage firstMessage =
+                    messages.isEmpty() ? null
+                    : (com.example.carma_android_app.models.AutoResponseMessage) messages.get(0);
+            String messageText  = firstMessage != null ? firstMessage.getMessageText() : "No response generated.";
+            String explanation  = firstMessage != null && firstMessage.getExplanation() != null
+                    ? firstMessage.getExplanation() : "";
 
             String parsedRequestId = requestId;
             String parsedUuid      = uuid;
@@ -187,12 +194,13 @@ public class ContextInputActivity extends AppCompatActivity {
             } catch (Exception ignored) { }
 
             Intent intent = new Intent(ContextInputActivity.this, PreviewActivity.class);
-            intent.putExtra(PreviewActivity.EXTRA_MESSAGE_TEXT, messageText);
-            intent.putExtra(PreviewActivity.EXTRA_REQUEST_ID,   parsedRequestId);
-            intent.putExtra(PreviewActivity.EXTRA_UUID,         parsedUuid);
-            intent.putExtra(PreviewActivity.EXTRA_ACTIVITY,     "");
-            intent.putExtra(PreviewActivity.EXTRA_LOCATION,     "");
-            intent.putExtra(PreviewActivity.EXTRA_NOTIF_APP,    "");
+            intent.putExtra(PreviewActivity.EXTRA_MESSAGE_TEXT,  messageText);
+            intent.putExtra(PreviewActivity.EXTRA_EXPLANATION,   explanation);
+            intent.putExtra(PreviewActivity.EXTRA_REQUEST_ID,    parsedRequestId);
+            intent.putExtra(PreviewActivity.EXTRA_UUID,          parsedUuid);
+            intent.putExtra(PreviewActivity.EXTRA_ACTIVITY,      "");
+            intent.putExtra(PreviewActivity.EXTRA_LOCATION,      "");
+            intent.putExtra(PreviewActivity.EXTRA_NOTIF_APP,     "");
             startActivity(intent);
         }
     }

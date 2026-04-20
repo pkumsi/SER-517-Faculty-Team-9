@@ -84,4 +84,5 @@ type ContextSnapshot struct {
 	IsLauncher      *int64  `json:"Is_Launcher,omitempty"`
 
 	PredictedAvailability *string `json:"Predicted_Availability,omitempty"`
+	DeviceState *string `json:"DeviceState,omitempty"`
 }

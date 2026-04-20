@@ -1,16 +1,24 @@
 package services
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 
-	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/cache"
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/models"
 )
 
-func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey string, c *cache.RedisCache) (*models.LLMResponseResult, error) {
+type llmJSONResponse struct {
+	Response    string `json:"response"`
+	Explanation string `json:"explanation"`
+}
+
+// GenerateAutoResponse builds a prompt and calls the LLM. If exposeLLMErrors is true
+// (development), LLM failures return a wrapped error so the handler can surface
+// provider messages (e.g. 401 Invalid API Key) for debugging.
+func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey string, baseURL string, exposeLLMErrors bool) (*models.LLMResponseResult, error) {
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
@@ -18,45 +26,18 @@ func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey s
 		return nil, errors.New("context snapshot is required")
 	}
 
-	var response string
-	if c != nil {
-		contextJSON, _ := json.Marshal(req.Context)
-		cacheKey := cache.BuildKeyFromRaw(string(contextJSON))
-		if cached, ok := c.Get(context.Background(), cacheKey); ok {
-			log.Printf("Cache hit for key %s", cacheKey)
-			response = cached
-		} else {
-			prompt := buildPrompt(req.Context, req.Rules)
-			var err error
-			response, err = callLLM(prompt, model, apiKey)
-			if err != nil {
-				log.Printf("LLM call failed: %v", err)
-				return nil, errors.New("auto-response generation failed. The AI service is currently unavailable or took too long to respond. Please try again in a few seconds")
-			}
-			if setErr := c.Set(context.Background(), cacheKey, response); setErr != nil {
-				log.Printf("Cache set failed: %v", setErr)
-			}
-		}
-	} else {
-		prompt := buildPrompt(req.Context, req.Rules)
-		var err error
-		response, err = callLLM(prompt, model, apiKey)
-		if err != nil {
-			log.Printf("LLM call failed: %v", err)
-			return nil, errors.New("auto-response generation failed. The AI service is currently unavailable or took too long to respond. Please try again in a few seconds")
-		}
+	prompt := buildPrompt(req.Context, req.Rules)
+	raw, err := callLLM(prompt, model, apiKey, baseURL)
+	if err != nil {
+		log.Printf("LLM call failed: %v", err)
+		return nil, llmFailureReturn(err, exposeLLMErrors)
 	}
 
-	// Step 6 — Assemble and return LLMResponseResult
+	parsed := parseLLMResponse(raw)
+
 	arEnabled := true
 	sentAR := true
-
-	// Increment message statistics if cache is available
-	if c != nil {
-		if err := c.IncrementMessageCount(context.Background()); err != nil {
-			log.Printf("Failed to increment message count: %v", err)
-		}
-	}
+	explanation := parsed.Explanation
 
 	return &models.LLMResponseResult{
 		RequestID:             req.RequestID,
@@ -66,6 +47,34 @@ func GenerateAutoResponse(req *models.LLMResponseRequest, model string, apiKey s
 		AREnabled:             &arEnabled,
 		SentAR:                &sentAR,
 		PredictedAvailability: req.Context.PredictedAvailability,
-		Responses:             &[]string{response},
+		Responses:             &[]string{parsed.Response},
+		Explainability:        &models.Explainability{ShapRaw: &explanation},
 	}, nil
+}
+
+// parseLLMResponse extracts the response and explanation from the LLM's JSON output.
+// Falls back to using the raw string as the response if JSON parsing fails.
+func parseLLMResponse(raw string) llmJSONResponse {
+	raw = strings.TrimSpace(raw)
+	// Strip markdown code fences if the model wrapped the JSON
+	if strings.HasPrefix(raw, "```") {
+		if idx := strings.Index(raw, "\n"); idx != -1 {
+			raw = raw[idx+1:]
+		}
+		raw = strings.TrimSuffix(strings.TrimSpace(raw), "```")
+		raw = strings.TrimSpace(raw)
+	}
+	var result llmJSONResponse
+	if err := json.Unmarshal([]byte(raw), &result); err != nil {
+		log.Printf("LLM response was not valid JSON, using raw text: %v", err)
+		result.Response = raw
+	}
+	return result
+}
+
+func llmFailureReturn(cause error, expose bool) error {
+	if expose {
+		return fmt.Errorf("LLM provider error: %v", cause)
+	}
+	return errors.New("auto-response generation failed. The AI service is currently unavailable or took too long to respond. Please try again in a few seconds")
 }

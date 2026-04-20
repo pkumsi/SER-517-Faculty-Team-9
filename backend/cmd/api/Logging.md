@@ -11,4 +11,4 @@ The logger is initialized in main.go. It opens the file in append mode, meaning 
 -Server start/stop events
 -Environment and Config loading (LLM Model, Port, etc.)
 -Endpoint hits (/, /health, /api/v1/response)
--OpenRouter API key status
+-LLM API key status (see main.go log lines)

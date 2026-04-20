@@ -9,7 +9,6 @@ public class Constants {
     public static final String API_VERSION = "v1";
     public static final String API_ENDPOINT_RESPONSE = "/api/v1/response";
     public static final String API_ENDPOINT_FEEDBACK = "/api/v1/feedback";
-    public static final String API_ENDPOINT_STATISTICS = "/api/v1/statistics/messages";
     public static final String API_ENDPOINT_HEALTH = "/health";
     
     // Response Tones
@@ -32,12 +31,13 @@ public class Constants {
         "Speak about the user in third person. Do NOT imitate the user directly.",
         "Do NOT fabricate details. Use only the context supplied below.",
         "Adjust tone based on sender relationship: formal for managers or colleagues, casual for friends.",
-        "Always set a realistic expectation for when the user will respond.",
+        "Do NOT suggest or imply when the user will respond or become available. Never use phrases like 'will be available', 'will respond', 'once done', 'shortly after', 'when free', or anything similar. The response must ONLY explain why they are unavailable right now.",
+        "Do NOT include specific locations, addresses, or full event titles in the response. Keep event references general (e.g. 'a meeting', 'an event').",
         "Keep the response concise: 1 to 3 sentences maximum.",
         "Do not mention raw sensor data, device state, noise levels, or battery information.",
         "Generate exactly ONE response only. Do not provide multiple options or variations.",
         "Do not use placeholder text like [User's Name]. If no name is provided in the context, refer to the user as 'the user'. Do not invent or assume any name.",
-        "Do not add any explanation, commentary, or follow-up questions after the response."
+        "The 'response' field must contain only the auto-response message — no extra commentary, questions, or follow-up text."
     };
     
     // Request/Response Keys

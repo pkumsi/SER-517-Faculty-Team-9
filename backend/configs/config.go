@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -15,10 +16,9 @@ type Config struct {
 	Server  ServerConfig
 	Logging LoggingConfig
 	API     APIConfig
-	// OpenAI   OpenAIConfig
 	LLM     LLMConfig
 	Metrics MetricsConfig
-	Redis   RedisConfig
+	Memory  MemoryConfig
 }
 
 // struct for server-related configuration
@@ -34,24 +34,18 @@ type LoggingConfig struct {
 	Format string // "json" or "text"
 }
 
-// struct API-related configuration
+// struct for API-related configuration
 type APIConfig struct {
 	Version string
 	Timeout time.Duration
 }
 
-// struct for OpenAI integration settings - can be changed to differnent AI provider in the future if needed
-//
-//	type OpenAIConfig struct {
-//		APIKey    string
-//		Model     string
-//		MaxTokens int
-//		OpenRouterAPIKey string
-//	}
+// LLMConfig holds OpenAI-compatible provider settings (OpenRouter).
 type LLMConfig struct {
-	OpenRouterAPIKey string
-	Model            string
-	MaxTokens        int
+	BaseURL   string
+	APIKey    string
+	Model     string
+	MaxTokens int
 }
 
 // struct for monitoring configuration
@@ -60,13 +54,10 @@ type MetricsConfig struct {
 	Port    string
 }
 
-// struct for Redis cache configuration
-type RedisConfig struct {
-	Enabled  bool
-	Addr     string
-	Password string
-	DB       int
-	TTL      time.Duration
+// MemoryConfig holds settings for the in-memory record store.
+// PerUserCapacity <= 0 means unlimited.
+type MemoryConfig struct {
+	PerUserCapacity int
 }
 
 // LoadConfig loads configuration from environment variables
@@ -95,27 +86,18 @@ func LoadConfig() (*Config, error) {
 			Version: getEnv("API_VERSION", "v1"),
 			Timeout: getEnvAsDuration("API_TIMEOUT", 30*time.Second),
 		},
-		// OpenAI: OpenAIConfig{
-		// 	APIKey:    getEnv("OPENAI_API_KEY", ""),
-		// 	Model:     getEnv("OPENAI_MODEL", "gpt-4"),
-		// 	MaxTokens: getEnvAsInt("OPENAI_MAX_TOKENS", 1000),
-		// 	OpenRouterAPIKey: getEnv("OPENROUTER_API_KEY", ""),
-		// },
 		LLM: LLMConfig{
-			OpenRouterAPIKey: getEnv("OPENROUTER_API_KEY", ""),
-			Model:            getEnv("LLM_MODEL", "google/gemma-3-4b-it:free"),
-			MaxTokens:        getEnvAsInt("LLM_MAX_TOKENS", 1000),
+			BaseURL:   strings.TrimSpace(getEnv("LLM_BASE_URL", "https://openrouter.ai/api/v1")),
+			APIKey:    strings.TrimSpace(getEnv("OPENROUTER_API_KEY", "")),
+			Model:     strings.TrimSpace(getEnv("LLM_MODEL", "nvidia/nemotron-nano-9b-v2:free")),
+			MaxTokens: getEnvAsInt("LLM_MAX_TOKENS", 1000),
 		},
 		Metrics: MetricsConfig{
 			Enabled: getEnvAsBool("ENABLE_METRICS", true),
 			Port:    getEnv("METRICS_PORT", "9090"),
 		},
-		Redis: RedisConfig{
-			Enabled:  getEnvAsBool("REDIS_ENABLED", true),
-			Addr:     getEnv("REDIS_ADDR", "localhost:6379"),
-			Password: getEnv("REDIS_PASSWORD", ""),
-			DB:       getEnvAsInt("REDIS_DB", 0),
-			TTL:      getEnvAsDuration("REDIS_CACHE_TTL", 1*time.Hour),
+		Memory: MemoryConfig{
+			PerUserCapacity: getEnvAsInt("MEMORY_PER_USER_CAPACITY", 100),
 		},
 	}
 
@@ -129,8 +111,7 @@ func LoadConfig() (*Config, error) {
 
 // Validate checks if required configuration values are set
 func (c *Config) Validate() error {
-	// right it only validates open router api key because that what we are using we can later add validation for other llm providers if we add support for them in the future
-	if c.LLM.OpenRouterAPIKey == "" {
+	if c.LLM.APIKey == "" {
 		return fmt.Errorf("OPENROUTER_API_KEY is required but not set")
 	}
 
@@ -182,6 +163,7 @@ func getEnv(key, defaultValue string) string {
 	}
 	return value
 }
+
 
 func getEnvAsInt(key string, defaultValue int) int {
 	valueStr := os.Getenv(key)

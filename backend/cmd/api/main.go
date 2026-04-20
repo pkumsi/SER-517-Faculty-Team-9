@@ -7,23 +7,23 @@ import (
 	"github.com/Depado/ginprom"
 	"github.com/gin-gonic/gin"
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/configs"
-	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/cache"
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/handlers"
 	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/logger"
+	"github.com/pkumsi/SER-517-Faculty-Team-9/backend/internal/memory"
 )
 
 func main() {
-	logFile, err := logger.Init("api.log")
-	if err != nil {
-		log.Fatalf("Failed to open log file: %v", err)
-	}
-	defer logFile.Close()
-
-	// Load configuration
+	// Load configuration before logger so we can mirror logs to stderr in development.
 	cfg, err := configs.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
+
+	logFile, err := logger.Init("api.log", cfg.IsDevelopment())
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	defer logFile.Close()
 
 	// Debug info
 	log.Println("Starting API Server")
@@ -52,23 +52,14 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	var redisCache *cache.RedisCache
-	if cfg.Redis.Enabled {
-		var cacheErr error
-		redisCache, cacheErr = cache.NewRedisCache(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB, cfg.Redis.TTL)
-		if cacheErr != nil {
-			log.Printf("Warning: Redis unavailable, caching disabled: %v", cacheErr)
-		} else {
-			log.Printf("Redis cache connected: %s (TTL: %s)", cfg.Redis.Addr, cfg.Redis.TTL)
-			defer redisCache.Close()
-		}
-	}
-
 	// Instantiate handler with config so LLM settings flow from
 	// .env → configs.LLMConfig → handler → service → llm client
-	llmHandler := handlers.NewLLMHandler(cfg, redisCache)
+	llmHandler := handlers.NewLLMHandler(cfg)
 	feedbackHandler := handlers.NewFeedbackHandler()
-	statisticsHandler := handlers.NewStatisticsHandler(redisCache)
+
+	// In-memory record store for the standalone memory service.
+	memStore := memory.New(cfg.Memory.PerUserCapacity)
+	memHandler := memory.NewHandler(memStore)
 
 	// LLM response generation endpoint
 	// POST /api/v1/response
@@ -77,7 +68,7 @@ func main() {
 	{
 		v1.POST("/response", llmHandler.GenerateAutoResponse)
 		v1.POST("/feedback", feedbackHandler.SubmitFeedback)
-		v1.GET("/statistics/messages", statisticsHandler.GetMessageStatistics)
+		memHandler.RegisterRoutes(v1)
 	}
 
 	serverAddr := ":" + cfg.Server.Port
@@ -88,9 +79,12 @@ func main() {
 	log.Printf("  GET  http://localhost%s/health", serverAddr)
 	log.Printf("  POST http://localhost%s/api/v1/response", serverAddr)
 	log.Printf("  POST http://localhost%s/api/v1/feedback", serverAddr)
-	log.Printf("  GET  http://localhost%s/api/v1/statistics/messages", serverAddr)
-	log.Printf("OpenRouter API Key loaded: %v", cfg.LLM.OpenRouterAPIKey != "")
-	log.Printf("LLM Model: %s", cfg.LLM.Model)
+	log.Printf("  POST http://localhost%s/api/v1/memory", serverAddr)
+	log.Printf("  GET  http://localhost%s/api/v1/memory/:uuid", serverAddr)
+	log.Printf("  DEL  http://localhost%s/api/v1/memory/:uuid/:id", serverAddr)
+	log.Printf("OpenRouter API key loaded: %v", cfg.LLM.APIKey != "")
+	log.Printf("LLM base URL: %s", cfg.LLM.BaseURL)
+	log.Printf("LLM model: %s", cfg.LLM.Model)
 
 	// Start Gin server
 	if err := r.Run(serverAddr); err != nil {

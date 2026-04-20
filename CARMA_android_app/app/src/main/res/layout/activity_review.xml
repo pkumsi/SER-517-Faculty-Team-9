@@ -43,6 +43,7 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_my_calendar"
+                android:onClick="onDateFilterClicked"
                 android:contentDescription="Select date"
                 app:tint="#2196F3" />
 

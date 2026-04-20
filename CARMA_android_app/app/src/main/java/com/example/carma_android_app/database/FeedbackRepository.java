@@ -75,6 +75,91 @@ public class FeedbackRepository {
         insertFeedback(feedback, callback);
     }
 
+    /**
+     * Replace any existing feedback for this message, then insert the new row.
+     * Use when the user changes their mind or submits feedback again from Review.
+     */
+    public void saveOrReplaceFeedback(long messageId, boolean positive, String comment, Callback<Long> callback) {
+        executor.execute(() -> {
+            try {
+                feedbackDao.deleteByMessageId(messageId);
+                String type = positive ? FeedbackEntity.THUMBS_UP : FeedbackEntity.THUMBS_DOWN;
+                String c = (comment != null && !comment.trim().isEmpty()) ? comment.trim() : null;
+                FeedbackEntity feedback = new FeedbackEntity(messageId, type, c);
+                feedback.setPreviewFeedbackType(type);
+                long id = feedbackDao.insert(feedback);
+                messageDao.markAsFeedbackGiven(messageId, System.currentTimeMillis());
+                mainHandler.post(() -> callback.onSuccess(id));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(e));
+            }
+        });
+    }
+
+    /**
+     * Save questionnaire responses for a message.
+     */
+    public void saveOrReplaceQuestionnaireFeedback(long messageId,
+                                                   String q1Usefulness,
+                                                   String q2Comfort,
+                                                   String q3Appropriateness,
+                                                   String q4ExplanationSense,
+                                                   String q5Clarity,
+                                                   Callback<Long> callback) {
+        executor.execute(() -> {
+            try {
+                FeedbackEntity existing = feedbackDao.getFeedbackByMessageId(messageId);
+                feedbackDao.deleteByMessageId(messageId);
+                String type = deriveFeedbackTypeFromUsefulness(q1Usefulness);
+                FeedbackEntity feedback = new FeedbackEntity(
+                        messageId,
+                        type,
+                        q1Usefulness,
+                        q2Comfort,
+                        q3Appropriateness,
+                        q4ExplanationSense,
+                        q5Clarity
+                );
+                String preservedPreviewType = extractPreviewFeedbackType(existing);
+                feedback.setPreviewFeedbackType(preservedPreviewType);
+                long id = feedbackDao.insert(feedback);
+                messageDao.markAsFeedbackGiven(messageId, System.currentTimeMillis());
+                mainHandler.post(() -> callback.onSuccess(id));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(e));
+            }
+        });
+    }
+
+    private static String deriveFeedbackTypeFromUsefulness(String usefulness) {
+        if (usefulness == null) {
+            return "neutral";
+        }
+        String normalized = usefulness.trim().toLowerCase();
+        if ("very useful".equals(normalized) || "somewhat useful".equals(normalized)) {
+            return FeedbackEntity.THUMBS_UP;
+        }
+        if ("not very useful".equals(normalized) || "not useful at all".equals(normalized)) {
+            return FeedbackEntity.THUMBS_DOWN;
+        }
+        return "neutral";
+    }
+
+    private static String extractPreviewFeedbackType(FeedbackEntity existing) {
+        if (existing == null) {
+            return null;
+        }
+        String explicit = existing.getPreviewFeedbackType();
+        if (FeedbackEntity.THUMBS_UP.equals(explicit) || FeedbackEntity.THUMBS_DOWN.equals(explicit)) {
+            return explicit;
+        }
+        String legacy = existing.getFeedbackType();
+        if (FeedbackEntity.THUMBS_UP.equals(legacy) || FeedbackEntity.THUMBS_DOWN.equals(legacy)) {
+            return legacy;
+        }
+        return null;
+    }
+
     // ============ UPDATE OPERATIONS ============
 
     /**

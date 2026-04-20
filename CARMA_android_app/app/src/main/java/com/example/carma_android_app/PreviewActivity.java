@@ -17,10 +17,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import com.example.carma_android_app.database.MessageRepository;
 import com.example.carma_android_app.database.MessageEntity;
+import com.example.carma_android_app.models.PreviewScreenData;
+import com.example.carma_android_app.network.ApiClient;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.Arrays;
 
@@ -28,6 +31,7 @@ public class PreviewActivity extends AppCompatActivity {
 
     // Intent extra keys — set by ContextInputActivity
     public static final String EXTRA_MESSAGE_TEXT = "extra_message_text";
+    public static final String EXTRA_EXPLANATION  = "extra_explanation";
     public static final String EXTRA_REQUEST_ID   = "extra_request_id";
     public static final String EXTRA_UUID         = "extra_uuid";
     public static final String EXTRA_ACTIVITY     = "extra_activity";
@@ -60,13 +64,23 @@ public class PreviewActivity extends AppCompatActivity {
     private TextView tvMessageContent;
     private TextView tvEditable;
 
+    // Explanation section
+    private TextView tvExplanation;
+
     // Action buttons
     private MaterialButton btnCancel;
     private MaterialButton btnSendNow;
 
+    // Bottom navigation
+    private BottomNavigationView bottomNavigation;
+
     // Database
     private MessageRepository messageRepository;
+    private com.example.carma_android_app.database.FeedbackRepository feedbackRepository;
     private long currentMessageId = -1; // Track the current message being edited
+    private Boolean pendingThumbFeedback = null; // true = thumbs up, false = thumbs down
+    private boolean hasLocalEdits = false;
+    private String initialMessageText = "";
 
     // State variables
     private boolean isContextExpanded = true;
@@ -88,6 +102,7 @@ public class PreviewActivity extends AppCompatActivity {
 
         // Initialize database
         messageRepository = new MessageRepository(this);
+        feedbackRepository = new com.example.carma_android_app.database.FeedbackRepository(this);
 
         // Initialize all views
         initializeViews();
@@ -130,6 +145,9 @@ public class PreviewActivity extends AppCompatActivity {
         tvMessageContent = findViewById(R.id.tv_message_content);
         tvEditable = findViewById(R.id.tv_editable);
 
+        // Explanation section
+        tvExplanation = findViewById(R.id.tv_explanation);
+
         // Action buttons
         btnCancel = findViewById(R.id.btn_cancel);
         btnSendNow = findViewById(R.id.btn_send_now);
@@ -171,9 +189,6 @@ public class PreviewActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_review) {
                 navigateToReview();
                 return true;
-            } else if (itemId == R.id.nav_contacts) {
-                navigateToContacts();
-                return true;
             }
             return false;
         });
@@ -188,12 +203,13 @@ public class PreviewActivity extends AppCompatActivity {
 
         if (hasRealData) {
             // Populate from backend response passed via Intent
-            String messageText = intent.getStringExtra(EXTRA_MESSAGE_TEXT);
-            requestId          = intent.getStringExtra(EXTRA_REQUEST_ID);
-            uuid               = intent.getStringExtra(EXTRA_UUID);
-            String activity    = intent.getStringExtra(EXTRA_ACTIVITY);
-            String location    = intent.getStringExtra(EXTRA_LOCATION);
-            String notifApp    = intent.getStringExtra(EXTRA_NOTIF_APP);
+            String messageText  = intent.getStringExtra(EXTRA_MESSAGE_TEXT);
+            String explanText   = intent.getStringExtra(EXTRA_EXPLANATION);
+            requestId           = intent.getStringExtra(EXTRA_REQUEST_ID);
+            uuid                = intent.getStringExtra(EXTRA_UUID);
+            String activity     = intent.getStringExtra(EXTRA_ACTIVITY);
+            String location     = intent.getStringExtra(EXTRA_LOCATION);
+            String notifApp     = intent.getStringExtra(EXTRA_NOTIF_APP);
 
             // Map raw values back to human-readable chip labels
             String activityLabel = mapActivityLabel(activity);
@@ -229,12 +245,29 @@ public class PreviewActivity extends AppCompatActivity {
         // Bind to UI
         tvRecipientName.setText(previewScreenData.getRecipientName());
         tvMessageContent.setText(previewScreenData.getMessageContent());
+        initialMessageText = previewScreenData.getMessageContent() != null
+                ? previewScreenData.getMessageContent()
+                : "";
         tvTimer.setText(previewScreenData.getTimerText());
         bindContextChips(
             previewScreenData.getContextTags().get(0),
             previewScreenData.getContextTags().get(1),
             previewScreenData.getContextTags().get(2)
         );
+
+        // Show explanation if available
+        if (hasRealData) {
+            String explanText = intent.getStringExtra(EXTRA_EXPLANATION);
+            if (explanText != null && !explanText.isEmpty()) {
+                tvExplanation.setText("Why this response: " + explanText);
+                tvExplanation.setVisibility(android.view.View.VISIBLE);
+            } else {
+                tvExplanation.setVisibility(android.view.View.GONE);
+            }
+        } else {
+            tvExplanation.setVisibility(android.view.View.GONE);
+        }
+
         bottomNavigation.setSelectedItemId(R.id.nav_preview);
     }
 
@@ -394,15 +427,19 @@ public class PreviewActivity extends AppCompatActivity {
 
 
     private void handleThumbsUp() {
-        btnThumbsUp.setColorFilter(getResources().getColor(android.R.color.holo_green_dark));
+        btnThumbsUp.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_green_dark));
         btnThumbsDown.clearColorFilter();
+        pendingThumbFeedback = true;
+        persistPreviewFeedbackIfPossible();
         sendFeedbackToBackend(true);
     }
 
 
     private void handleThumbsDown() {
-        btnThumbsDown.setColorFilter(getResources().getColor(android.R.color.holo_red_dark));
+        btnThumbsDown.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_red_dark));
         btnThumbsUp.clearColorFilter();
+        pendingThumbFeedback = false;
+        persistPreviewFeedbackIfPossible();
         sendFeedbackToBackend(false);
     }
 
@@ -447,6 +484,7 @@ public class PreviewActivity extends AppCompatActivity {
 
         // Could show a toast
         // Toast.makeText(this, chipType + " tag removed", Toast.LENGTH_SHORT).show();
+        persistMessageSnapshotIfAlreadySaved();
     }
 
 
@@ -498,11 +536,13 @@ public class PreviewActivity extends AppCompatActivity {
         // Handle chip removal
         newChip.setOnCloseIconClickListener(v -> {
             ((LinearLayout) layoutContextContent).removeView(newChip);
+            persistMessageSnapshotIfAlreadySaved();
         });
 
         // Add chip to the layout (before the "Add" button)
         int addButtonIndex = ((LinearLayout) layoutContextContent).indexOfChild(chipAdd);
         ((LinearLayout) layoutContextContent).addView(newChip, addButtonIndex);
+        persistMessageSnapshotIfAlreadySaved();
     }
 
 
@@ -526,6 +566,7 @@ public class PreviewActivity extends AppCompatActivity {
                         if (previewScreenData != null) {
                             previewScreenData.setMessageContent(updated);
                         }
+                        hasLocalEdits = true;
                         // Re-detect context based on edited message
                         detectContextFromMessage();
 
@@ -554,16 +595,14 @@ public class PreviewActivity extends AppCompatActivity {
 
         // Update timer display to reflect cancellation
         tvTimer.setText("Send cancelled");
-        tvTimer.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+        tvTimer.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
 
         // Disable both buttons so action cannot be repeated
         btnCancel.setEnabled(false);
         btnSendNow.setEnabled(false);
 
-        // Save cancelled message to database
+        // Save cancelled message to database (Toast comes from save callback)
         saveMessageToDatabase("cancelled");
-
-        Toast.makeText(this, "Auto-send cancelled", Toast.LENGTH_SHORT).show();
     }
 
 
@@ -582,27 +621,13 @@ public class PreviewActivity extends AppCompatActivity {
         btnCancel.setEnabled(false);
         btnSendNow.setEnabled(false);
 
-        // Save message to database
+        // Save message to database (Toast comes from save callback)
         saveMessageToDatabase("sent");
-
-        Toast.makeText(this, "Message sent!", Toast.LENGTH_SHORT).show();
     }
 
 
     private void navigateToReview() {
-        // TODO: Implement navigation to ReviewActivity
-        // Intent intent = new Intent(this, ReviewActivity.class);
-        // startActivity(intent);
-
-        // Toast.makeText(this, "Review screen - coming soon", Toast.LENGTH_SHORT).show();
-    }
-
-    private void navigateToContacts() {
-        // TODO: Implement navigation to ContactsActivity
-        // Intent intent = new Intent(this, ContactsActivity.class);
-        // startActivity(intent);
-
-        // Toast.makeText(this, "Contacts screen - coming soon", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(this, ReviewActivity.class));
     }
 
     @Override
@@ -626,28 +651,61 @@ public class PreviewActivity extends AppCompatActivity {
             return;
         }
 
-        MessageEntity message = new MessageEntity();
-        message.setRequestId(requestId);
-        message.setRecipientName("Recipient"); // TODO: Get actual recipient name
-        message.setMessageText(previewScreenData.getMessageContent());
-        message.setTimestamp(System.currentTimeMillis());
-        message.setTone("Auto"); // TODO: Determine tone from context
-        message.setStatus(status);
-        message.setContextActivity(chipActivity.getText().toString().replace("Activity: ", ""));
-        message.setContextSender(chipSender.getText().toString().replace("Sender: ", ""));
-        message.setContextUrgency(chipUrgency.getText().toString().replace("Urgency: ", ""));
+        // Always persist what the user actually sees in the preview (may differ from model if UI drifted).
+        String body = tvMessageContent.getText().toString().trim();
+        previewScreenData.setMessageContent(body);
 
-        messageRepository.insertMessage(message, new MessageRepository.Callback<Long>() {
+        if (currentMessageId == -1) {
+            MessageEntity message = new MessageEntity();
+            applyCurrentPreviewToMessage(message, status);
+            messageRepository.insertMessage(message, new MessageRepository.Callback<Long>() {
+                @Override
+                public void onSuccess(Long messageId) {
+                    currentMessageId = messageId;
+                    persistPreviewFeedbackIfPossible();
+                    Toast.makeText(PreviewActivity.this,
+                            "Saved (" + status + ") to device database",
+                            Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    android.util.Log.e("PreviewActivity", "Room insert failed", e);
+                    Toast.makeText(PreviewActivity.this,
+                            "Could not save to database: " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                }
+            });
+            return;
+        }
+
+        messageRepository.getMessageById(currentMessageId, new MessageRepository.Callback<MessageEntity>() {
             @Override
-            public void onSuccess(Long messageId) {
-                currentMessageId = messageId;
-                // Message saved successfully
+            public void onSuccess(MessageEntity existing) {
+                if (existing == null) return;
+                applyCurrentPreviewToMessage(existing, status);
+                messageRepository.updateMessage(existing, new MessageRepository.SimpleCallback() {
+                    @Override
+                    public void onSuccess() {
+                        persistPreviewFeedbackIfPossible();
+                        Toast.makeText(PreviewActivity.this,
+                                "Updated (" + status + ") in device database",
+                                Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        android.util.Log.e("PreviewActivity", "Room update failed", e);
+                        Toast.makeText(PreviewActivity.this,
+                                "Could not update database: " + e.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
             }
 
             @Override
             public void onError(Exception e) {
-                // Handle error - could log or show user feedback
-                e.printStackTrace();
+                android.util.Log.e("PreviewActivity", "Room fetch failed", e);
             }
         });
     }
@@ -657,8 +715,7 @@ public class PreviewActivity extends AppCompatActivity {
      */
     private void updateMessageInDatabase(String updatedText) {
         if (currentMessageId == -1) {
-            // Message not yet saved to database, save it now
-            saveMessageToDatabase("pending");
+            // Message not saved yet; keep edits in memory and persist once user sends/cancels.
             return;
         }
 
@@ -671,10 +728,10 @@ public class PreviewActivity extends AppCompatActivity {
                     if (!message.isUserEdited()) {
                         message.setOriginalText(message.getMessageText());
                     }
-                    
                     message.setMessageText(updatedText);
                     message.setUserEdited(true);
                     message.setUpdatedAt(System.currentTimeMillis());
+                    applyCurrentPreviewToMessage(message, message.getStatus());
 
                     messageRepository.updateMessage(message, new MessageRepository.SimpleCallback() {
                         @Override
@@ -695,6 +752,111 @@ public class PreviewActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         });
+    }
+
+    private void applyCurrentPreviewToMessage(MessageEntity message, String status) {
+        String body = tvMessageContent.getText().toString().trim();
+        String activity = chipActivity.getVisibility() == View.VISIBLE
+                ? chipActivity.getText().toString().replace("Activity: ", "")
+                : "";
+        String sender = chipSender.getVisibility() == View.VISIBLE
+                ? chipSender.getText().toString().replace("Sender: ", "")
+                : "";
+        String urgency = chipUrgency.getVisibility() == View.VISIBLE
+                ? chipUrgency.getText().toString().replace("Urgency: ", "")
+                : "";
+
+        message.setRequestId(requestId);
+        message.setRecipientName(tvRecipientName.getText().toString().trim());
+        message.setMessageText(body);
+        message.setTimestamp(System.currentTimeMillis());
+        message.setTone("Auto");
+        message.setStatus(status);
+        message.setContextActivity(activity);
+        message.setContextSender(sender);
+        message.setContextUrgency(urgency);
+        message.setContextTags(buildAdditionalContextTagsJson());
+        if (hasLocalEdits) {
+            message.setUserEdited(true);
+            String existingOriginal = message.getOriginalText();
+            if (existingOriginal == null || existingOriginal.trim().isEmpty()) {
+                message.setOriginalText(initialMessageText);
+            }
+        }
+    }
+
+    private String buildAdditionalContextTagsJson() {
+        JSONArray tags = new JSONArray();
+        if (!(layoutContextContent instanceof LinearLayout)) {
+            return tags.toString();
+        }
+
+        LinearLayout container = (LinearLayout) layoutContextContent;
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View child = container.getChildAt(i);
+            if (!(child instanceof Chip)) {
+                continue;
+            }
+            int id = child.getId();
+            if (id == R.id.chip_activity || id == R.id.chip_sender || id == R.id.chip_urgency || id == R.id.chip_add) {
+                continue;
+            }
+            if (child.getVisibility() != View.VISIBLE) {
+                continue;
+            }
+            String tag = ((Chip) child).getText().toString().trim();
+            if (!tag.isEmpty()) {
+                tags.put(tag);
+            }
+        }
+        return tags.toString();
+    }
+
+    private void persistMessageSnapshotIfAlreadySaved() {
+        if (currentMessageId == -1) {
+            return;
+        }
+        messageRepository.getMessageById(currentMessageId, new MessageRepository.Callback<MessageEntity>() {
+            @Override
+            public void onSuccess(MessageEntity message) {
+                if (message == null) return;
+                applyCurrentPreviewToMessage(message, message.getStatus());
+                messageRepository.updateMessage(message, new MessageRepository.SimpleCallback() {
+                    @Override
+                    public void onSuccess() {
+                        // no-op
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        android.util.Log.e("PreviewActivity", "Room snapshot update failed", e);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("PreviewActivity", "Room fetch failed", e);
+            }
+        });
+    }
+
+    private void persistPreviewFeedbackIfPossible() {
+        if (pendingThumbFeedback == null || currentMessageId == -1) {
+            return;
+        }
+        feedbackRepository.saveOrReplaceFeedback(currentMessageId, pendingThumbFeedback, null,
+                new com.example.carma_android_app.database.FeedbackRepository.Callback<Long>() {
+                    @Override
+                    public void onSuccess(Long id) {
+                        // no-op
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        android.util.Log.e("PreviewActivity", "Room feedback save failed", e);
+                    }
+                });
     }
     @Override
     protected void onDestroy() {

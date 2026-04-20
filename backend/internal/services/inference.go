@@ -275,29 +275,6 @@ func inferSenderRole(ctx *models.ContextSnapshot) string {
 	return ""
 }
 
-// resolveAppName maps Android package names to human-readable messaging app names.
-func resolveAppName(packageName string) string {
-	appNames := map[string]string{
-		"com.whatsapp":                      "WhatsApp",
-		"com.facebook.messenger":            "Facebook Messenger",
-		"org.telegram.messenger":            "Telegram",
-		"com.google.android.gm":             "Gmail",
-		"com.microsoft.teams":               "Microsoft Teams",
-		"com.slack":                         "Slack",
-		"com.instagram.android":             "Instagram",
-		"com.twitter.android":               "Twitter",
-		"com.snapchat.android":              "Snapchat",
-		"com.linkedin.android":              "LinkedIn",
-		"com.google.android.apps.messaging": "Google Messages",
-	}
-	if name, ok := appNames[packageName]; ok {
-		return name
-	}
-	if packageName != "" {
-		return packageName
-	}
-	return ""
-}
 
 // inferUrgency estimates the urgency of the incoming message from passive signals.
 // Message Urgency is Tier 2 High — Task #22.

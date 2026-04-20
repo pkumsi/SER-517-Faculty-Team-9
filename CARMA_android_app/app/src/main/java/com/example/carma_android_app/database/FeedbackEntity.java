@@ -31,9 +31,27 @@ public class FeedbackEntity {
     
     @ColumnInfo(name = "feedback_type")
     private String feedbackType; // "thumbs_up" or "thumbs_down"
+
+    @ColumnInfo(name = "preview_feedback_type")
+    private String previewFeedbackType; // preview-time thumbs value
     
     @ColumnInfo(name = "comment")
     private String comment; // Optional user comment
+
+    @ColumnInfo(name = "q1_usefulness")
+    private String q1Usefulness;
+
+    @ColumnInfo(name = "q2_comfort")
+    private String q2Comfort;
+
+    @ColumnInfo(name = "q3_appropriateness")
+    private String q3Appropriateness;
+
+    @ColumnInfo(name = "q4_explanation_sense")
+    private String q4ExplanationSense;
+
+    @ColumnInfo(name = "q5_clarity")
+    private String q5Clarity;
     
     @ColumnInfo(name = "timestamp")
     private long timestamp;
@@ -62,6 +80,21 @@ public class FeedbackEntity {
         this(messageId, feedbackType);
         this.comment = comment;
     }
+
+    public FeedbackEntity(long messageId,
+                          String feedbackType,
+                          String q1Usefulness,
+                          String q2Comfort,
+                          String q3Appropriateness,
+                          String q4ExplanationSense,
+                          String q5Clarity) {
+        this(messageId, feedbackType);
+        this.q1Usefulness = q1Usefulness;
+        this.q2Comfort = q2Comfort;
+        this.q3Appropriateness = q3Appropriateness;
+        this.q4ExplanationSense = q4ExplanationSense;
+        this.q5Clarity = q5Clarity;
+    }
     
     // Getters and Setters
     public long getId() {
@@ -87,6 +120,14 @@ public class FeedbackEntity {
     public void setFeedbackType(String feedbackType) {
         this.feedbackType = feedbackType;
     }
+
+    public String getPreviewFeedbackType() {
+        return previewFeedbackType;
+    }
+
+    public void setPreviewFeedbackType(String previewFeedbackType) {
+        this.previewFeedbackType = previewFeedbackType;
+    }
     
     public String getComment() {
         return comment;
@@ -94,6 +135,46 @@ public class FeedbackEntity {
     
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getQ1Usefulness() {
+        return q1Usefulness;
+    }
+
+    public void setQ1Usefulness(String q1Usefulness) {
+        this.q1Usefulness = q1Usefulness;
+    }
+
+    public String getQ2Comfort() {
+        return q2Comfort;
+    }
+
+    public void setQ2Comfort(String q2Comfort) {
+        this.q2Comfort = q2Comfort;
+    }
+
+    public String getQ3Appropriateness() {
+        return q3Appropriateness;
+    }
+
+    public void setQ3Appropriateness(String q3Appropriateness) {
+        this.q3Appropriateness = q3Appropriateness;
+    }
+
+    public String getQ4ExplanationSense() {
+        return q4ExplanationSense;
+    }
+
+    public void setQ4ExplanationSense(String q4ExplanationSense) {
+        this.q4ExplanationSense = q4ExplanationSense;
+    }
+
+    public String getQ5Clarity() {
+        return q5Clarity;
+    }
+
+    public void setQ5Clarity(String q5Clarity) {
+        this.q5Clarity = q5Clarity;
     }
     
     public long getTimestamp() {

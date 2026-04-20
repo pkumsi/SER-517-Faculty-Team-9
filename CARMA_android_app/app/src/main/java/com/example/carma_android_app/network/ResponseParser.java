@@ -22,6 +22,12 @@ public class ResponseParser {
             JSONObject response = new JSONObject(jsonResponse);
             String requestId = response.optString("request_id", "");
 
+            String explanation = "";
+            if (response.has("explainability") && !response.isNull("explainability")) {
+                JSONObject explainability = response.getJSONObject("explainability");
+                explanation = explainability.optString("Shap_raw", "");
+            }
+
             if (response.has("responses")) {
                 JSONArray responsesArray = response.getJSONArray("responses");
 
@@ -30,8 +36,9 @@ public class ResponseParser {
                     AutoResponseMessage message = new AutoResponseMessage(
                             requestId,
                             messageText,
-                            "Casual" // Default tone, can be enhanced later
+                            "Casual"
                     );
+                    message.setExplanation(explanation);
                     messages.add(message);
                 }
             }

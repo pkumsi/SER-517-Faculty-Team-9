@@ -9,6 +9,7 @@ public class AutoResponseMessage {
     private String messageText;
     private String tone;
     private String context;
+    private String explanation;
     private long timestamp;
     private boolean isSent;
 
@@ -51,6 +52,14 @@ public class AutoResponseMessage {
 
     public void setContext(String context) {
         this.context = context;
+    }
+
+    public String getExplanation() {
+        return explanation;
+    }
+
+    public void setExplanation(String explanation) {
+        this.explanation = explanation;
     }
 
     public long getTimestamp() {

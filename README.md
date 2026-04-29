@@ -1,5 +1,5 @@
 # SER-517 Faculty Team 9
-A Go REST API that generates context-aware auto-responses for incoming messages. It reads sensor data from a mobile device, infers what the user is doing, and uses an LLM (via [Groq](https://groq.com)'s OpenAI-compatible API) to write a short, polite reply on their behalf.
+A Go REST API that generates context-aware auto-responses for incoming messages. It reads sensor data from a mobile device, infers what the user is doing, and uses an LLM to write a short, polite reply on their behalf.
 
 ---
 
@@ -7,8 +7,7 @@ A Go REST API that generates context-aware auto-responses for incoming messages.
 
 - **Language:** Go 1.25
 - **Framework:** Gin
-- **LLM Provider:** Groq (OpenAI-compatible API)
-- **Default Model:** `llama-3.3-70b-versatile`
+- **LLM Provider:** OpenRouter
 
 ---
 
@@ -29,7 +28,7 @@ backend/
 │   │   ├── llm_service.go   # Main pipeline orchestrator
 │   │   ├── inference.go     # Infers activity and context from sensor data
 │   │   ├── prompt.go        # Builds the LLM prompt
-│   │   └── llm.go           # Calls the LLM provider (Groq by default)
+│   │   └── llm.go           # Calls the LLM provider (OPENROUTER by default)
 │   └── models/
 │       ├── models_input.go  # Request and ContextSnapshot types
 │       └── models_output.go # Response and feedback types
@@ -41,7 +40,6 @@ backend/
 ### 1. Prerequisites
 
 - Go 1.21+
-- A [Groq](https://console.groq.com) API key (free tier available)
 
 ## Installing Go
 
@@ -83,10 +81,10 @@ cp configs/.env.example .env
 Edit `.env` and set your API key:
 
 ```
-GROQ_API_KEY=your_key_here
+OPENROUTER_API_KEY=your_key_here
 ```
 
-Optional: set `LLM_MODEL` to any model id your Groq account supports (see [Groq docs](https://console.groq.com/docs/models)). For another OpenAI-compatible API, set `LLM_BASE_URL` and put that provider’s API key in `GROQ_API_KEY`.
+Optional: set `LLM_MODEL` to any model id your OPENROUTER account supports (see [OPENROUTER docs](https://console.OPENROUTER.com/docs/models)). For another OpenAI-compatible API, set `LLM_BASE_URL` and put that provider’s API key in `OPENROUTER_API_KEY`.
 
 ### 3. Run the server
 
@@ -163,7 +161,7 @@ The server starts on `http://localhost:8080` by default.
 
 1. **Inference** — Raw sensor fields (calendar, motion, screen state, call status, etc.) are mapped to 5 context elements: Activity, Current Time, Sender Role, Urgency, and Expected Response Time.
 2. **Prompt selection** — A prompt variant is chosen based on which elements are available (Standard → Rich → Minimal).
-3. **LLM call** — The prompt is sent to Groq (or whatever host `LLM_BASE_URL` points to). The LLM returns a 1–3 sentence auto-response.
+3. **LLM call** — The prompt is sent to OPENROUTER (or whatever host `LLM_BASE_URL` points to). The LLM returns a 1–3 sentence auto-response.
 4. **Response** — The generated message is returned in the `responses` field.
 
 ---
@@ -176,8 +174,8 @@ The server starts on `http://localhost:8080` by default.
 | `HOST` | `localhost` | Server host |
 | `ENVIRONMENT` | `development` | `development`, `staging`, or `production` |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, or `error` |
-| `GROQ_API_KEY` | *(required)* | Groq API key (bearer token for the LLM request) |
-| `LLM_BASE_URL` | `https://api.groq.com/openai/v1` | OpenAI-compatible API base URL |
+| `OPENROUTER_API_KEY` | *(required)* | OPENROUTER API key (bearer token for the LLM request) |
+| `LLM_BASE_URL` | `https://api.OPENROUTER.com/openai/v1` | OpenAI-compatible API base URL |
 | `LLM_MODEL` | `llama-3.3-70b-versatile` | Model id for the provider |
 | `LLM_MAX_TOKENS` | `1000` | Max tokens per response |
 
